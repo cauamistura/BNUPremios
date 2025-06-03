@@ -1,16 +1,18 @@
 import Header from "./Components/Header";
 import "./App.css";
-import RewardCardList from "./Components/RewardCardList";
-import rewardsMock from "./assets/Mocks/Rewards.json";
+import { BrowserRouter as Router } from "react-router-dom";
+import AppRoutes from "./routes";
 
 function App() {
   return (
-    <div className="app-container">
-      <Header />
-      <div className="content-container">
-        <RewardCardList rewards={rewardsMock} />
+    <Router>
+      <div className="app-container">
+        <Header />
+        <div className="content-container">
+          <AppRoutes />
+        </div>
       </div>
-    </div>
+    </Router>
   );
 }
 
