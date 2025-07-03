@@ -1,0 +1,98 @@
+.reward-price-box {
+    background: #ededed;
+    border-radius: 12px;
+    padding: 20px 16px 18px 16px;    
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .reward-price-sober {
+    font-size: 1.04rem;
+    color: #23213a;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  
+  /* QuotaSelector melhorias */
+  .quota-selector {
+    margin: 0;
+    width: 100%;
+  }
+  
+  .quota-options {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  
+  .quota-option-btn {
+    background: #f6f3fd;
+    color: #7c3aed;
+    border: 1.5px solid #e3d8fa;
+    border-radius: 16px;
+    padding: 8px 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border 0.15s;
+    min-width: 48px;
+  }
+  
+  .quota-option-btn.selected,
+  .quota-option-btn:hover {
+    background: #7c3aed;
+    color: #fff;
+    border-color: #7c3aed;
+  }
+  
+  .quota-option-input {
+    width: 70px;
+    padding: 8px 10px;
+    border-radius: 14px;
+    border: 1.5px solid #e3d8fa;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #23213a;
+    background: #fff;
+    outline: none;
+    margin-left: 6px;
+    transition: border 0.15s, box-shadow 0.15s;
+    box-shadow: 0 1px 4px #7c3aed11;
+  }
+  
+  .quota-option-input:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 2px #7c3aed33;
+  }
+  
+  .quota-option-input.no-spinner::-webkit-outer-spin-button,
+  .quota-option-input.no-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  .quota-option-input.no-spinner {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  
+  .quota-total {
+    font-size: 1.08rem;
+    color: #23213a;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  
+  .quota-total span {
+    color: #7c3aed;
+    font-weight: 700;
+  }
+  
+  @media (max-width: 748px) {
+
+  }
+  

@@ -1,0 +1,291 @@
+/* Container principal da página de detalhes */
+.reward-details-container {
+  min-height: 100vh;
+  background: #f8f9fb;
+}
+
+.reward-details-content {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.reward-details-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(44, 44, 84, 0.07);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid #ece9f7;
+}
+
+.reward-details-carousel {
+  width: 100%;
+  max-width: 100%;
+  background: #f3f0fa;
+  border-bottom: 1.5px solid #ece9f7;
+  overflow: hidden;
+}
+
+.reward-carousel-image {
+  width: 100%;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reward-carousel-image img {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  display: block;
+  border-radius: 0;
+}
+
+.slick-slider {
+  width: 100%;
+  height: 320px;
+}
+
+.slick-list {
+  width: 100%;
+  height: 320px;
+}
+
+.slick-slide>div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 320px;
+}
+
+.slick-dots li button:before {
+  color: #7c3aed;
+  opacity: 0.5;
+}
+
+.slick-dots li.slick-active button:before {
+  color: #7c3aed;
+  opacity: 1;
+}
+
+.slick-arrow {
+  z-index: 2;
+}
+
+.slick-prev:before,
+.slick-next:before {
+  color: #7c3aed;
+  font-size: 32px;
+}
+
+.reward-details-info {
+  padding: 9px 28px 9px 28px;
+}
+
+.reward-details-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #23213a;
+  margin-bottom: 2px;
+  letter-spacing: 0.2px;
+}
+
+.reward-details-description {
+  font-size: 1.01rem;
+  color: #4a4a68;
+  line-height: 1.5;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.reward-details-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.reward-details-date {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.93rem;
+  color: #23213a;
+  font-weight: 500;
+  margin-bottom: 0;
+  gap: 8px;
+}
+
+.status-badge {
+  margin-left: auto;
+  font-size: 0.93rem;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  background: #f6f3fd;
+  color: #7c3aed;
+  border: 1px solid #e3d8fa;
+}
+
+.status-badge.completed {
+  background: #e5e7eb;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.status-badge.pending {
+  background: #f6f3fd;
+  color: #7c3aed;
+  border: 1px solid #7c3aed;
+}
+
+.reward-details-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  color: #23213a;
+}
+
+.reward-details-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.participate-button {
+  padding: 8px 18px;
+  font-size: 0.98rem;
+  border-radius: 16px;
+  background: #fff;
+  color: #7c3aed;
+  border: 1.5px solid #7c3aed;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.04);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.participate-button:hover {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.reward-price-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f6f3fd;
+  color: #7c3aed;
+  font-weight: 700;
+  font-size: 1.13rem;
+  border-radius: 18px;
+  padding: 6px 18px 6px 14px;
+  margin: 0 0 12px 0;
+  box-shadow: 0 2px 8px #7c3aed11;
+  border: 1.5px solid #e3d8fa;
+}
+
+.reward-price-badge-label {
+  font-size: 0.98rem;
+  color: #7c3aedcc;
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+.reward-price-box {
+  background: #ededed;
+  border-radius: 10px;
+  padding: 8px 8px 6px 8px;
+  margin: 10px 0 8px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.reward-price-sober {
+  font-size: 0.93rem;
+  color: #23213a;
+  font-weight: 500;
+  margin-bottom: 0;
+}
+
+.reward-divider {
+  border: none;
+  border-top: 1.5px solid #ece9f7;
+  margin: 8px 0 8px 0;
+  width: 100%;
+}
+
+.top-buyers-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 10px;
+  justify-content: flex-start;
+  align-items: stretch;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #e3d8fa #ededed;
+}
+
+.top-buyer-card {
+  flex: 0 0 140px;
+  min-width: 120px;
+  max-width: 180px;
+}
+
+@media (max-width: 768px) {  
+
+  .reward-details-content {
+    max-width: 100%;
+    padding: 0 2px;
+  }
+
+  .reward-details-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(44, 44, 84, 0.06);
+    border-width: 1px;
+    width: 96vw;
+    margin: 0 auto 18px auto;
+    min-width: 0;
+  }
+
+  .reward-details-info {
+    padding: 4px 10px 4px 10px;
+  }
+
+  .reward-details-title {
+    font-size: 1.08rem;
+    margin-bottom: 1px;
+  }
+
+  .reward-details-description {
+    font-size: 0.97rem;
+    margin-bottom: 3px;
+  }
+
+  .reward-details-carousel {
+    height: 400px;
+    min-height: 120px;
+    max-height: 250px;
+  }
+
+  .reward-carousel-image,
+  .reward-carousel-image img,
+  .slick-slider,
+  .slick-list,
+  .slick-slide>div {
+    height: 400px !important;
+    min-height: 120px;
+    max-height: 250px;
+  }
+}

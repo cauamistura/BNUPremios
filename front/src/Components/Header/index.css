@@ -9,6 +9,7 @@
   top: 0;
   left: 0;
   z-index: 1000;
+  align-items: center;
 }
 
 .logo {
@@ -127,4 +128,31 @@
   .desktop-only {
     display: none;
   }
+}
+
+.header-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+.header-menu {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 24px;
+  margin-left: auto;
+}
+
+.header-menu a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 1.05rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.header-menu a:hover {
+  color: #7c3aed;
 }

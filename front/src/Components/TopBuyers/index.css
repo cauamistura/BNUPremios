@@ -1,0 +1,115 @@
+/* Top Buyers Section - centralizado e na parte de baixo do card */
+.top-buyers-section {
+  background: #ededed;
+  border-radius: 12px;
+  padding: 24px 16px 20px 16px;
+  margin: 32px auto 24px auto;
+  max-width: 95%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.97rem;
+}
+
+.top-buyers-title {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #222;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.top-buyers-subtitle {
+  font-size: 0.88rem;
+  color: #888;
+  margin-bottom: 14px;
+  margin-top: 2px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.top-buyers-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 10px;
+  justify-content: flex-start;
+  align-items: stretch;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #e3d8fa #ededed;
+}
+
+.top-buyer-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 14px 16px;
+  flex: 0 0 140px;
+  min-width: 120px;
+  text-align: center;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.top-buyer-rank {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.top-buyer-name {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 2px;
+  letter-spacing: 1px;
+}
+
+.top-buyer-amount {
+  font-size: 0.89rem;
+  color: #444;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .reward-price-box,
+  .top-buyers-section {
+    max-width: 100%;
+    margin-left: 20px;
+    margin-right: 20px;
+    padding: 14px 4px 10px 4px;
+  }
+  .top-buyers-list {
+    gap: 8px;
+  }
+  .top-buyer-card {
+    flex: 0 0 120px;
+    min-width: 100px;
+    max-width: 140px;
+  }
+  .top-buyer-name {
+    font-size: 10px;
+    font-weight: 700;   
+  }
+  .top-buyers-subtitle,
+  .top-buyer-amount {
+    font-size: 10px;   
+  }
+  .top-buyers-title {
+    font-size: 15px;   
+  }
+  .top-buyers-list-container {
+    display: flex;    
+  }
+} 
