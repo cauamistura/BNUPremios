@@ -10,17 +10,17 @@ const Header: React.FC = () => {
   };
 
   const isMobile = window.innerWidth < 768;
-  
+
   return (
-    <header className="header-container">      
-      <a href="/" className="logo">BNU Prêmios</a>        
-      <div className="nav-menu" style={{ right: isMenuOpen ? '0' : '-100%' }}>             
-        {!isMobile && <a href="/carrinho" className="nav-link cart-text">Carrinho</a>}                   
+    <header className="header-container">
+      <a href="/" className="logo">BNU Prêmios</a>
+      <div className="nav-menu" style={{ right: isMenuOpen ? '0' : '-100%' }}>
+        {!isMobile && <a href="/MeuPerfil" className="nav-link cart-text">Meu Perfil</a>}
         <a href="/participar" className="nav-link">Participar</a>
         <a href="/contato" className="nav-link">Contato</a>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', paddingRight: '2rem' }}>
-        <a href="/carrinho" className="cart-icon cart-icon-mobile">
+        <a href="/MeuPerfil" className="cart-icon cart-icon-mobile">
           <span className="material-icons">shopping_cart</span>
           {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
         </a>

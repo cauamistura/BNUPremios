@@ -1,0 +1,42 @@
+{
+  "user": {
+    "id": 1,
+    "name": "João Silva",
+    "email": "joao.silva@email.com",
+    "phone": "(11) 99999-9999",
+    "avatar": "https://via.placeholder.com/150/4A90E2/FFFFFF?text=JS",
+    "joinDate": "2024-01-15"
+  },
+  "purchases": [
+    {
+      "id": 1,
+      "rewardId": 1,
+      "rewardName": "iPhone 15 Pro Max",
+      "rewardImage": "https://via.placeholder.com/300x200/4A90E2/FFFFFF?text=iPhone",
+      "numbers": [15, 23, 45, 67, 89, 12, 34, 56, 78, 90],
+      "purchaseDate": "2024-03-15",
+      "totalAmount": 50.00,
+      "status": "active"
+    },
+    {
+      "id": 2,
+      "rewardId": 2,
+      "rewardName": "PlayStation 5",
+      "rewardImage": "https://via.placeholder.com/300x200/7B68EE/FFFFFF?text=PS5",
+      "numbers": [5, 18, 29, 41, 52, 63, 74, 85, 96, 7],
+      "purchaseDate": "2024-03-10",
+      "totalAmount": 30.00,
+      "status": "active"
+    },
+    {
+      "id": 3,
+      "rewardId": 3,
+      "rewardName": "MacBook Air M2",
+      "rewardImage": "https://via.placeholder.com/300x200/32CD32/FFFFFF?text=MacBook",
+      "numbers": [11, 22, 33, 44, 55, 66, 77, 88, 99, 10],
+      "purchaseDate": "2024-02-28",
+      "totalAmount": 25.00,
+      "status": "completed"
+    }
+  ]
+} 
