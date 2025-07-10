@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: bnupremios_postgres
+    environment:
+      POSTGRES_DB: bnupremios
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    networks:
+      - bnupremios_network
+
+  app:
+    build: .
+    container_name: bnupremios_app
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=bnupremios
+      - JWT_SECRET=your-secret-key-here
+    depends_on:
+      - postgres
+    networks:
+      - bnupremios_network
+
+volumes:
+  postgres_data:
+
+networks:
+  bnupremios_network:
+    driver: bridge 
