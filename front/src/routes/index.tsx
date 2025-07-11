@@ -4,6 +4,8 @@ import Contacts from '../Pages/Contacts';
 import RewardDetails from '../Pages/RewardDetails';
 import Profile from '../Pages/Profile';
 import ProtectedRoute from '../Components/ProtectedRoute';
+import RegisterPage from '../Pages/Auth/Register';
+import LoginPage from '../Pages/Auth/Login';
 
 const AppRoutes = () => {
     return (
@@ -12,6 +14,8 @@ const AppRoutes = () => {
             <Route path="/contato" element={<Contacts />} />
             <Route path="/premio/:id" element={<RewardDetails />} />
             <Route path="/participar" element={<div>Página em construção</div>} />
+            <Route path="/auth/login" element={<LoginPage />} />
+            <Route path="/auth/register" element={<RegisterPage />} />
             <Route path="/MeuPerfil" element={
                 <ProtectedRoute>
                     <Profile />

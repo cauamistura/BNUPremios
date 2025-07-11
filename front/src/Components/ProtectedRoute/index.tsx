@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import LoginModal from '../LoginModal';
+import { useNavigate } from 'react-router-dom';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -8,11 +8,17 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
+    const navigate = useNavigate();
 
     console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, 'loading:', loading);
 
-    try {
+    useEffect(() => {
+        if (!loading && !isAuthenticated) {
+            navigate('/auth/login');
+        }
+    }, [loading, isAuthenticated, navigate]);
 
+    try {
         if (loading) {
             return (
                 <div style={{ 
@@ -29,22 +35,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         }
 
         if (!isAuthenticated) {
+            // Retorna um loading enquanto redireciona
             return (
                 <div style={{ 
                     display: 'flex', 
                     justifyContent: 'center', 
                     alignItems: 'center', 
                     height: '50vh',
-                    flexDirection: 'column',
-                    gap: '20px'
+                    fontSize: '1.2rem',
+                    color: '#666'
                 }}>
-                    <h2>Área Restrita</h2>
-                    <p>Você precisa estar logado para acessar esta página.</p>
-                    <LoginModal 
-                        isOpen={true}
-                        onClose={() => window.history.back()}
-                        onSuccess={() => window.location.reload()}
-                    />
+                    Redirecionando para login...
                 </div>
             );
         }

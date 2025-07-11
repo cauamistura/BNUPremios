@@ -58,6 +58,7 @@ func main() {
 
 	// Configurar handlers
 	userHandler := handlers.NewUserHandler(userService)
+	rewardHandler := handlers.NewRewardHandler(services.NewRewardService(repository.NewRewardRepository(db)))
 
 	// Configurar Gin
 	if cfg.API.Mode == "release" {
@@ -67,7 +68,7 @@ func main() {
 	router := gin.Default()
 
 	// Configurar rotas
-	routes.SetupRoutes(router, userHandler)
+	routes.SetupRoutes(router, userHandler, rewardHandler)
 
 	// Iniciar servidor
 	port := os.Getenv("API_PORT")

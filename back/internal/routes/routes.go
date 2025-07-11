@@ -10,7 +10,7 @@ import (
 )
 
 // SetupRoutes configura todas as rotas da aplicação
-func SetupRoutes(router *gin.Engine, userHandler *handlers.UserHandler) {
+func SetupRoutes(router *gin.Engine, userHandler *handlers.UserHandler, rewardHandler *handlers.RewardHandler) {
 	// Middleware global
 	router.Use(middleware.CORS())
 	router.Use(middleware.Logger())
@@ -51,6 +51,22 @@ func SetupRoutes(router *gin.Engine, userHandler *handlers.UserHandler) {
 		{
 			auth.POST("/login", userHandler.Login)
 			auth.POST("/register", userHandler.Register)
+		}
+
+		// Rotas de prêmios
+		rewards := api.Group("/rewards")
+		{
+			rewards.POST("/", rewardHandler.Create)
+			rewards.GET("/", rewardHandler.List)
+			rewards.GET("/:id", rewardHandler.GetByID)
+			rewards.GET("/:id/details", rewardHandler.GetDetailsByID)
+			rewards.PUT("/:id", rewardHandler.Update)
+			rewards.DELETE("/:id", rewardHandler.Delete)
+			
+			// Rotas de compradores
+			rewards.GET("/:id/buyers", rewardHandler.GetBuyers)
+			rewards.POST("/:id/buyers/:user_id", rewardHandler.AddBuyer)
+			rewards.DELETE("/:id/buyers/:user_id", rewardHandler.RemoveBuyer)
 		}
 	}
 } 

@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"time"
 
 	"github.com/cauamistura/BNUPremios/internal/models"
 	"github.com/cauamistura/BNUPremios/internal/repository"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -190,11 +192,22 @@ func (s *UserService) Login(loginReq *models.LoginRequest) (*models.LoginRespons
 		return nil, errors.New("credenciais inválidas")
 	}
 
-	// Gerar token JWT (implementação simplificada)
-	token := "jwt-token-placeholder" // Em produção, usar uma biblioteca JWT real
+	// Gerar token JWT real (simples, sem validação de segredo forte por enquanto)
+	claims := jwt.MapClaims{
+		"sub": user.ID.String(),
+		"email": user.Email,
+		"role": user.Role,
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	secret := []byte("minha-chave-secreta") // Trocar por uma variável de ambiente em produção
+	tokenString, err := token.SignedString(secret)
+	if err != nil {
+		return nil, errors.New("erro ao gerar token JWT")
+	}
 
 	return &models.LoginResponse{
-		Token: token,
+		Token: tokenString,
 		User:  *s.toUserResponse(user),
 	}, nil
 }

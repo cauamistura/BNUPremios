@@ -1,11 +1,14 @@
 import React, { createContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User } from '../Models/User';
+import type { RegisterPayload } from '../services/authService';
+import { login as apiLogin, register as apiRegister } from '../services/authService';
 
 interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     login: (email: string, password: string) => Promise<boolean>;
+    register: (payload: RegisterPayload) => Promise<boolean>;
     logout: () => void;
     loading: boolean;
 }
@@ -37,32 +40,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const login = async (email: string, password: string): Promise<boolean> => {
         setLoading(true);
-        
         try {
-            // Simular uma chamada de API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Mock de validação (em produção, isso seria uma chamada real para a API)
-            if (email === 'joao.silva@email.com' && password === '123456') {
-                const mockUser: User = {
-                    id: 1,
-                    name: 'João Silva',
-                    email: 'joao.silva@email.com',
-                    phone: '(11) 99999-9999',
-                    avatar: 'https://via.placeholder.com/150/4A90E2/FFFFFF?text=JS',
-                    joinDate: '2024-01-15'
-                };
-                
-                setUser(mockUser);
-                localStorage.setItem('user', JSON.stringify(mockUser));
-                setLoading(false);
-                return true;
-            } else {
-                setLoading(false);
-                return false;
-            }
-        } catch (error) {
-            console.error('Erro no login:', error);
+            const data = await apiLogin({ email, password });
+            setUser(data.user);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('token', data.token);
+            setLoading(false);
+            return true;
+        } catch {
+            setLoading(false);
+            return false;
+        }
+    };
+
+    const register = async (payload: RegisterPayload): Promise<boolean> => {
+        setLoading(true);
+        try {
+            await apiRegister(payload);
+            setLoading(false);
+            return true;
+        } catch {
             setLoading(false);
             return false;
         }
@@ -77,6 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         user,
         isAuthenticated: !!user,
         login,
+        register,
         logout,
         loading
     };

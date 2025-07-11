@@ -1,32 +1,24 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import './index.css';
 
-interface LoginModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSuccess: () => void;
-}
-
-const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess }) => {
+const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { login } = useAuth();
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setIsLoading(true);
-
         try {
             const success = await login(email, password);
             if (success) {
-                onSuccess();
-                onClose();
-                setEmail('');
-                setPassword('');
+                navigate('/profile'); // Redireciona para a página de profile
             } else {
                 setError('Email ou senha incorretos');
             }
@@ -37,33 +29,20 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess }) =
         }
     };
 
-    const handleClose = () => {
-        if (!isLoading) {
-            setEmail('');
-            setPassword('');
-            setError('');
-            onClose();
-        }
+    const handleRegisterClick = () => {
+        navigate('/auth/register');
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="login-modal-overlay" onClick={handleClose}>
-            <div className="login-modal" onClick={(e) => e.stopPropagation()}>
-                <div className="login-modal-header">
-                    <h2>Login</h2>
-                    <button 
-                        className="login-modal-close" 
-                        onClick={handleClose}
-                        disabled={isLoading}
-                    >
-                        ×
-                    </button>
+        <div className="auth-page">
+            <div className="auth-container">
+                <div className="auth-header">
+                    <h1>Login</h1>
+                    <p>Entre com suas credenciais</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="login-form">
-                    <div className="login-form-group">
+                <form onSubmit={handleSubmit} className="auth-form">
+                    <div className="form-group">
                         <label htmlFor="email">Email</label>
                         <input
                             type="email"
@@ -75,8 +54,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess }) =
                             disabled={isLoading}
                         />
                     </div>
-
-                    <div className="login-form-group">
+                    <div className="form-group">
                         <label htmlFor="password">Senha</label>
                         <input
                             type="password"
@@ -88,30 +66,33 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess }) =
                             disabled={isLoading}
                         />
                     </div>
-
                     {error && (
-                        <div className="login-error">
+                        <div className="auth-error">
                             {error}
                         </div>
                     )}
-
                     <button 
                         type="submit" 
-                        className="login-submit-btn"
+                        className="auth-submit-btn"
                         disabled={isLoading}
                     >
                         {isLoading ? 'Entrando...' : 'Entrar'}
                     </button>
                 </form>
 
-                <div className="login-modal-footer">
-                    <p>Credenciais de teste:</p>
-                    <p><strong>Email:</strong> joao.silva@email.com</p>
-                    <p><strong>Senha:</strong> 123456</p>
+                <div className="auth-footer">
+                    <p>Não tem uma conta?</p>
+                    <button 
+                        className="auth-link-btn" 
+                        onClick={handleRegisterClick}
+                        disabled={isLoading}
+                    >
+                        Criar conta
+                    </button>
                 </div>
             </div>
         </div>
     );
 };
 
-export default LoginModal; 
+export default LoginPage; 
