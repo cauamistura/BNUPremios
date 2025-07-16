@@ -58,16 +58,28 @@ type LoginResponse struct {
 
 // Pagination representa a paginação
 type Pagination struct {
-	Page     int `json:"page"`
-	Limit    int `json:"limit"`
-	Total    int `json:"total"`
-	Pages    int `json:"pages"`
-	HasNext  bool `json:"has_next"`
-	HasPrev  bool `json:"has_prev"`
+	Page    int  `json:"page"`
+	Limit   int  `json:"limit"`
+	Total   int  `json:"total"`
+	Pages   int  `json:"pages"`
+	HasNext bool `json:"has_next"`
+	HasPrev bool `json:"has_prev"`
 }
 
 // UserListResponse representa a resposta da listagem de usuários
 type UserListResponse struct {
 	Users      []UserResponse `json:"users"`
 	Pagination Pagination     `json:"pagination"`
-} 
+}
+
+// BuyerWithNumber representa um comprador com o número comprado
+type BuyerWithNumber struct {
+	User   UserResponse `json:"user"`
+	Number int          `json:"number"`
+}
+
+// BuyerListResponse representa a resposta da listagem de compradores
+type BuyerListResponse struct {
+	Buyers     []BuyerWithNumber `json:"buyers"`
+	Pagination Pagination        `json:"pagination"`
+}

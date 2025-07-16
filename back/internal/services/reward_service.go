@@ -161,14 +161,14 @@ func (s *RewardService) Delete(id uuid.UUID) error {
 }
 
 // AddBuyer adiciona um comprador a um prêmio
-func (s *RewardService) AddBuyer(rewardID, userID uuid.UUID) error {
+func (s *RewardService) AddBuyer(rewardID, userID uuid.UUID, number int) error {
 	// Verificar se o prêmio existe
 	_, err := s.rewardRepo.GetByID(rewardID)
 	if err != nil {
 		return errors.New("prêmio não encontrado")
 	}
 
-	if err := s.rewardRepo.AddBuyer(rewardID, userID); err != nil {
+	if err := s.rewardRepo.AddBuyer(rewardID, userID, number); err != nil {
 		return fmt.Errorf("erro ao adicionar comprador: %w", err)
 	}
 
@@ -185,18 +185,49 @@ func (s *RewardService) RemoveBuyer(rewardID, userID uuid.UUID) error {
 }
 
 // GetBuyers busca todos os compradores de um prêmio
-func (s *RewardService) GetBuyers(rewardID uuid.UUID) ([]models.UserResponse, error) {
+func (s *RewardService) GetBuyers(rewardID uuid.UUID) ([]models.BuyerWithNumber, error) {
 	buyers, err := s.rewardRepo.GetBuyers(rewardID)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao buscar compradores: %w", err)
 	}
 
-	var buyerResponses []models.UserResponse
-	for _, buyer := range buyers {
-		buyerResponses = append(buyerResponses, *s.toUserResponse(&buyer))
+	return buyers, nil
+}
+
+// GetAvailableNumbers busca os números disponíveis para um prêmio
+func (s *RewardService) GetAvailableNumbers(rewardID uuid.UUID) ([]int, error) {
+	// Verificar se o prêmio existe
+	_, err := s.rewardRepo.GetByID(rewardID)
+	if err != nil {
+		return nil, errors.New("prêmio não encontrado")
 	}
 
-	return buyerResponses, nil
+	availableNumbers, err := s.rewardRepo.GetAvailableNumbers(rewardID)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao buscar números disponíveis: %w", err)
+	}
+
+	return availableNumbers, nil
+}
+
+// BuyNumbers compra uma quantidade específica de números para um usuário
+func (s *RewardService) BuyNumbers(rewardID, userID uuid.UUID, quantity int) ([]int, error) {
+	// Verificar se o prêmio existe
+	_, err := s.rewardRepo.GetByID(rewardID)
+	if err != nil {
+		return nil, errors.New("prêmio não encontrado")
+	}
+
+	if quantity <= 0 {
+		return nil, errors.New("quantidade deve ser maior que zero")
+	}
+
+	numbers, err := s.rewardRepo.BuyNumbers(rewardID, userID, quantity)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao comprar números: %w", err)
+	}
+
+	return numbers, nil
 }
 
 // toRewardResponse converte Reward para RewardResponse
@@ -216,18 +247,13 @@ func (s *RewardService) toRewardResponse(reward *models.Reward) *models.RewardRe
 // toRewardDetailsResponse converte RewardDetails para RewardDetailsResponse
 func (s *RewardService) toRewardDetailsResponse(rewardDetails *models.RewardDetails) *models.RewardDetailsResponse {
 	rewardResponse := s.toRewardResponse(&rewardDetails.Reward)
-	
-	var buyerResponses []models.UserResponse
-	for _, buyer := range rewardDetails.Buyers {
-		buyerResponses = append(buyerResponses, *s.toUserResponse(&buyer))
-	}
 
 	return &models.RewardDetailsResponse{
 		RewardResponse: *rewardResponse,
 		Images:         rewardDetails.Images,
 		Price:          rewardDetails.Price,
 		MinQuota:       rewardDetails.MinQuota,
-		Buyers:         buyerResponses,
+		Buyers:         rewardDetails.Buyers,
 	}
 }
 
@@ -242,4 +268,4 @@ func (s *RewardService) toUserResponse(user *models.User) *models.UserResponse {
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
-} 
+}

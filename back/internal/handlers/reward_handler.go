@@ -231,13 +231,14 @@ func (h *RewardHandler) Delete(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// AddBuyer @Summary Adicionar comprador ao prêmio
-// @Description Adiciona um usuário como comprador de um prêmio
+// AddBuyer @Summary Comprar números do prêmio
+// @Description Compra uma quantidade específica de números para um usuário
 // @Tags rewards
 // @Accept json
 // @Produce json
 // @Param id path string true "ID do prêmio"
 // @Param user_id path string true "ID do usuário"
+// @Param request body models.BuyNumbersRequest true "Quantidade de números"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
 // @Failure 404 {object} map[string]interface{}
@@ -265,7 +266,18 @@ func (h *RewardHandler) AddBuyer(c *gin.Context) {
 		return
 	}
 
-	if err := h.rewardService.AddBuyer(rewardID, userID); err != nil {
+	// Pegar a quantidade do body da requisição
+	var req models.BuyNumbersRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Quantidade é obrigatória",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	numbers, err := h.rewardService.BuyNumbers(rewardID, userID, req.Quantity)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Erro interno do servidor",
 			"message": err.Error(),
@@ -274,7 +286,9 @@ func (h *RewardHandler) AddBuyer(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Comprador adicionado com sucesso",
+		"message":  "Números comprados com sucesso",
+		"numbers":  numbers,
+		"quantity": req.Quantity,
 	})
 }
 
@@ -356,4 +370,42 @@ func (h *RewardHandler) GetBuyers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, buyers)
-} 
+}
+
+// GetAvailableNumbers @Summary Buscar números disponíveis
+// @Description Lista todos os números disponíveis para compra de um prêmio
+// @Tags rewards
+// @Accept json
+// @Produce json
+// @Param id path string true "ID do prêmio"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /rewards/{id}/available-numbers [get]
+func (h *RewardHandler) GetAvailableNumbers(c *gin.Context) {
+	rewardIDStr := c.Param("id")
+
+	rewardID, err := uuid.Parse(rewardIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "ID do prêmio inválido",
+			"message": "Formato de ID inválido",
+		})
+		return
+	}
+
+	availableNumbers, err := h.rewardService.GetAvailableNumbers(rewardID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Erro interno do servidor",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"available_numbers": availableNumbers,
+		"total_available":   len(availableNumbers),
+	})
+}

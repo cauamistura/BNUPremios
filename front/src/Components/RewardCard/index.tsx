@@ -33,7 +33,7 @@ const RewardCard: React.FC<RewardCardProps> = ({ reward }) => {
                 <h2 className="reward-title">{reward.name}</h2>
                 <p className="reward-description">{reward.description}</p>
                 <div className="reward-status">
-                    <p className="reward-date">Data do Sorteio: {formatDate(reward.drawDate)}</p>
+                    <p className="reward-date">Data do Sorteio: {formatDate(reward.draw_date)}</p>
                     <span className={`reward-card-status-badge ${reward.completed ? 'completed' : 'pending'}`}>
                         {reward.completed ? 'Sorteado' : 'Disponível'}
                     </span>

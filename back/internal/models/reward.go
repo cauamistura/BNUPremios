@@ -21,10 +21,10 @@ type Reward struct {
 // RewardDetails representa os detalhes completos de um prêmio
 type RewardDetails struct {
 	Reward
-	Images   []string `json:"images" db:"images"`
-	Price    float64  `json:"price" db:"price"`
-	MinQuota int      `json:"min_quota" db:"min_quota"`
-	Buyers   []User   `json:"buyers" db:"buyers"`
+	Images   []string          `json:"images" db:"images"`
+	Price    float64           `json:"price" db:"price"`
+	MinQuota int               `json:"min_quota" db:"min_quota"`
+	Buyers   []BuyerWithNumber `json:"buyers" db:"buyers"`
 }
 
 // CreateRewardRequest representa a requisição de criação de prêmio
@@ -65,14 +65,19 @@ type RewardResponse struct {
 // RewardDetailsResponse representa a resposta detalhada de um prêmio
 type RewardDetailsResponse struct {
 	RewardResponse
-	Images   []string       `json:"images"`
-	Price    float64        `json:"price"`
-	MinQuota int            `json:"min_quota"`
-	Buyers   []UserResponse `json:"buyers"`
+	Images   []string          `json:"images"`
+	Price    float64           `json:"price"`
+	MinQuota int               `json:"min_quota"`
+	Buyers   []BuyerWithNumber `json:"buyers"`
 }
 
 // RewardListResponse representa a resposta da listagem de prêmios
 type RewardListResponse struct {
 	Rewards    []RewardResponse `json:"rewards"`
 	Pagination Pagination       `json:"pagination"`
-} 
+}
+
+// BuyNumbersRequest representa a requisição para comprar números
+type BuyNumbersRequest struct {
+	Quantity int `json:"quantity" binding:"required,min=1"`
+}

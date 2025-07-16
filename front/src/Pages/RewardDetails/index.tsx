@@ -1,6 +1,7 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { RewardDetails } from '../../Models/Reaward';
-import rewardsMock from '../../assets/Mocks/RewardsDetails.json';
+import { rewardsService } from '../../services/rewardsService';
 import './index.css';
 import ImageCarousel from '../../Components/ImageCarousel';
 import TopBuyers from '../../Components/TopBuyers';
@@ -10,10 +11,53 @@ import QuotaSelector from '../../Components/QuotaSelector';
 export default function RewardDetails() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    
-    // Encontrar o prêmio pelo ID
-    const reward: RewardDetails | undefined = rewardsMock.find(r => r.id === Number(id));
-    
+    const [reward, setReward] = useState<RewardDetails | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchRewardDetails = async () => {
+            if (!id) return;
+            
+            try {
+                setLoading(true);
+                setError(null);
+                const data = await rewardsService.getRewardDetails(id);
+                setReward(data);
+            } catch (err) {
+                setError('Erro ao carregar os detalhes do prêmio. Tente novamente.');
+                console.error('Erro ao buscar detalhes do prêmio:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchRewardDetails();
+    }, [id]);
+
+    if (loading) {
+        return (
+            <div className="reward-details-loading-container">
+                <div className="reward-details-loading-spinner"></div>
+                <p>Carregando detalhes do prêmio...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="reward-details-error-container">
+                <p className="reward-details-error-message">{error}</p>
+                <button 
+                    className="reward-details-error-reload-btn" 
+                    onClick={() => window.location.reload()}
+                >
+                    Tentar novamente
+                </button>
+            </div>
+        );
+    }
+
     if (!reward) {
         return (
             <div className="reward-details-container">
@@ -41,7 +85,7 @@ export default function RewardDetails() {
                         <hr className="reward-divider" />
                         <div className="reward-details-meta">
                             <div className="reward-details-date">
-                                <strong>Data do Sorteio:</strong> {formatDate(reward.drawDate)}
+                                <strong>Data do Sorteio:</strong> {formatDate(reward.draw_date)}
                                 <span className={`status-badge ${reward.completed ? 'completed' : 'pending'}`}> 
                                     {reward.completed ? 'Sorteado' : 'Disponível'}
                                 </span>
@@ -51,7 +95,7 @@ export default function RewardDetails() {
                             <div className="reward-price-sober">
                                 Preço por cota: <span>R$ {reward.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                             </div>
-                            <QuotaSelector price={reward.price} minQuota={reward.minQuota} />
+                            <QuotaSelector price={reward.price} minQuota={reward.min_quota} />
                         </div>
                         <div className="reward-details-actions">
                             <button className="participate-button">

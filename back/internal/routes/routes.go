@@ -30,7 +30,7 @@ func SetupRoutes(router *gin.Engine, userHandler *handlers.UserHandler, rewardHa
 	docs.SwaggerInfo.Host = "localhost:8080"
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	docs.SwaggerInfo.Schemes = []string{"http"}
-	
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Grupo de rotas da API
@@ -62,11 +62,14 @@ func SetupRoutes(router *gin.Engine, userHandler *handlers.UserHandler, rewardHa
 			rewards.GET("/:id/details", rewardHandler.GetDetailsByID)
 			rewards.PUT("/:id", rewardHandler.Update)
 			rewards.DELETE("/:id", rewardHandler.Delete)
-			
+
+			// Rotas de números disponíveis
+			rewards.GET("/:id/available-numbers", rewardHandler.GetAvailableNumbers)
+
 			// Rotas de compradores
 			rewards.GET("/:id/buyers", rewardHandler.GetBuyers)
 			rewards.POST("/:id/buyers/:user_id", rewardHandler.AddBuyer)
 			rewards.DELETE("/:id/buyers/:user_id", rewardHandler.RemoveBuyer)
 		}
 	}
-} 
+}

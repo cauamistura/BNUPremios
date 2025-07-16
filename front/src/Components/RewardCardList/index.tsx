@@ -1,10 +1,10 @@
 import React from 'react';
-import type { RewardList } from '../../Models/Reaward';
+import type { Reward } from '../../Models/Reaward';
 import RewardCard from '../RewardCard';
 import './index.css';
 
 interface RewardCardListProps {
-    rewards: RewardList;
+    rewards: Reward[];
 }
 
 const RewardCardList: React.FC<RewardCardListProps> = ({ rewards }) => {

@@ -1,0 +1,54 @@
+.home-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: 20px;
+}
+
+.home-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: home-spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes home-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.home-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 20px;
+  text-align: center;
+}
+
+.home-error-message {
+  color: #e74c3c;
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
+
+.home-error-reload-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.home-error-reload-btn:hover {
+  background-color: #217dbb;
+} 
