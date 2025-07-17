@@ -274,4 +274,60 @@
         font-size: 0.8rem;
         min-width: 30px;
     }
+}
+
+/* Estilos para loading e error */
+.profile-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 20px;
+}
+
+.profile-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top: 4px solid #4CAF50;
+  border-radius: 50%;
+  animation: profile-spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes profile-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.profile-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: 20px;
+  text-align: center;
+}
+
+.profile-error-message {
+  color: #e74c3c;
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
+
+.profile-error-reload-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.profile-error-reload-btn:hover {
+  background-color: #45a049;
 } 

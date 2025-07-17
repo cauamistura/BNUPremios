@@ -18,7 +18,7 @@ const TopBuyerCard: React.FC<TopBuyerCardProps> = ({ name, amount, position }) =
         </span>
       </div>
       <div className="top-buyer-name">{name.toUpperCase()}</div>
-      <div className="top-buyer-amount">{amount} COTAS</div>
+      <div className="top-buyer-amount">{amount} números</div>
     </div>
   );
 };

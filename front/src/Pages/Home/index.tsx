@@ -17,8 +17,8 @@ export default function Home() {
                 const response = await rewardsService.getRewards();
                 setRewards(response.rewards);
             } catch (err) {
-                setError('Erro ao carregar as recompensas. Tente novamente.');
-                console.error('Erro ao buscar recompensas:', err);
+                setError('Erro ao carregar os prêmios. Tente novamente.');
+                console.error('Erro ao buscar prêmios:', err);
             } finally {
                 setLoading(false);
             }
@@ -31,7 +31,7 @@ export default function Home() {
         return (
             <div className="home-loading-container">
                 <div className="home-loading-spinner"></div>
-                <p>Carregando recompensas...</p>
+                <p>Carregando prêmios...</p>
             </div>
         );
     }

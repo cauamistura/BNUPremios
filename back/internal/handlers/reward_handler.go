@@ -23,9 +23,11 @@ func NewRewardHandler(rewardService *services.RewardService) *RewardHandler {
 // @Tags rewards
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param reward body models.CreateRewardRequest true "Dados do prêmio"
 // @Success 201 {object} models.RewardResponse
 // @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /rewards [post]
 func (h *RewardHandler) Create(c *gin.Context) {
@@ -51,7 +53,7 @@ func (h *RewardHandler) Create(c *gin.Context) {
 }
 
 // GetByID @Summary Buscar prêmio por ID
-// @Description Busca um prêmio específico pelo ID
+// @Description Busca um prêmio específico pelo ID (rota pública)
 // @Tags rewards
 // @Accept json
 // @Produce json
@@ -84,7 +86,7 @@ func (h *RewardHandler) GetByID(c *gin.Context) {
 }
 
 // GetDetailsByID @Summary Buscar detalhes do prêmio por ID
-// @Description Busca os detalhes completos de um prêmio específico pelo ID
+// @Description Busca os detalhes completos de um prêmio específico pelo ID (rota pública)
 // @Tags rewards
 // @Accept json
 // @Produce json
@@ -117,7 +119,7 @@ func (h *RewardHandler) GetDetailsByID(c *gin.Context) {
 }
 
 // List @Summary Listar prêmios
-// @Description Lista todos os prêmios com paginação
+// @Description Lista todos os prêmios com paginação (rota pública)
 // @Tags rewards
 // @Accept json
 // @Produce json
@@ -155,14 +157,16 @@ func (h *RewardHandler) List(c *gin.Context) {
 }
 
 // Update @Summary Atualizar prêmio
-// @Description Atualiza um prêmio existente
+// @Description Atualiza um prêmio existente (requer autenticação)
 // @Tags rewards
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path string true "ID do prêmio"
 // @Param reward body models.UpdateRewardRequest true "Dados para atualização"
 // @Success 200 {object} models.RewardResponse
 // @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
 // @Failure 404 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /rewards/{id} [put]
@@ -199,13 +203,15 @@ func (h *RewardHandler) Update(c *gin.Context) {
 }
 
 // Delete @Summary Deletar prêmio
-// @Description Remove um prêmio do sistema
+// @Description Remove um prêmio do sistema (requer autenticação)
 // @Tags rewards
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path string true "ID do prêmio"
 // @Success 204 "No Content"
 // @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
 // @Failure 404 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /rewards/{id} [delete]
@@ -232,15 +238,17 @@ func (h *RewardHandler) Delete(c *gin.Context) {
 }
 
 // AddBuyer @Summary Comprar números do prêmio
-// @Description Compra uma quantidade específica de números para um usuário
+// @Description Compra uma quantidade específica de números para um usuário (requer autenticação)
 // @Tags rewards
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path string true "ID do prêmio"
 // @Param user_id path string true "ID do usuário"
 // @Param request body models.BuyNumbersRequest true "Quantidade de números"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
 // @Failure 404 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /rewards/{id}/buyers/{user_id} [post]
@@ -293,14 +301,16 @@ func (h *RewardHandler) AddBuyer(c *gin.Context) {
 }
 
 // RemoveBuyer @Summary Remover comprador do prêmio
-// @Description Remove um usuário como comprador de um prêmio
+// @Description Remove um usuário como comprador de um prêmio (requer autenticação)
 // @Tags rewards
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path string true "ID do prêmio"
 // @Param user_id path string true "ID do usuário"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /rewards/{id}/buyers/{user_id} [delete]
 func (h *RewardHandler) RemoveBuyer(c *gin.Context) {
@@ -339,12 +349,12 @@ func (h *RewardHandler) RemoveBuyer(c *gin.Context) {
 }
 
 // GetBuyers @Summary Listar compradores do prêmio
-// @Description Lista todos os compradores de um prêmio específico
+// @Description Lista todos os compradores de um prêmio específico (rota pública)
 // @Tags rewards
 // @Accept json
 // @Produce json
 // @Param id path string true "ID do prêmio"
-// @Success 200 {array} models.UserResponse
+// @Success 200 {array} models.BuyerWithNumber
 // @Failure 400 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /rewards/{id}/buyers [get]
@@ -372,19 +382,23 @@ func (h *RewardHandler) GetBuyers(c *gin.Context) {
 	c.JSON(http.StatusOK, buyers)
 }
 
-// GetAvailableNumbers @Summary Buscar números disponíveis
-// @Description Lista todos os números disponíveis para compra de um prêmio
+// GetUserNumbers @Summary Buscar números de um usuário
+// @Description Lista todos os números comprados por um usuário específico em um prêmio (requer autenticação)
 // @Tags rewards
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path string true "ID do prêmio"
+// @Param user_id path string true "ID do usuário"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
 // @Failure 404 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
-// @Router /rewards/{id}/available-numbers [get]
-func (h *RewardHandler) GetAvailableNumbers(c *gin.Context) {
+// @Router /rewards/{id}/buyers/{user_id}/numbers [get]
+func (h *RewardHandler) GetUserNumbers(c *gin.Context) {
 	rewardIDStr := c.Param("id")
+	userIDStr := c.Param("user_id")
 
 	rewardID, err := uuid.Parse(rewardIDStr)
 	if err != nil {
@@ -395,7 +409,16 @@ func (h *RewardHandler) GetAvailableNumbers(c *gin.Context) {
 		return
 	}
 
-	availableNumbers, err := h.rewardService.GetAvailableNumbers(rewardID)
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "ID do usuário inválido",
+			"message": "Formato de ID inválido",
+		})
+		return
+	}
+
+	numbers, err := h.rewardService.GetUserNumbers(rewardID, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Erro interno do servidor",
@@ -405,7 +428,57 @@ func (h *RewardHandler) GetAvailableNumbers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"available_numbers": availableNumbers,
-		"total_available":   len(availableNumbers),
+		"numbers": numbers,
+		"total":   len(numbers),
 	})
+}
+
+// GetUserPurchases @Summary Listar compras do usuário
+// @Description Lista todas as compras de números feitas por um usuário
+// @Tags purchases
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param user_id path string true "ID do usuário"
+// @Param page query int false "Página (padrão: 1)"
+// @Param limit query int false "Limite por página (padrão: 10, máximo: 100)"
+// @Success 200 {object} models.PurchaseListResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /purchases/user/{user_id} [get]
+func (h *RewardHandler) GetUserPurchases(c *gin.Context) {
+	userIDStr := c.Param("user_id")
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "ID do usuário inválido",
+			"message": "Formato de ID inválido",
+		})
+		return
+	}
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	purchases, err := h.rewardService.GetUserPurchases(userID, page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Erro interno do servidor",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, purchases)
 }

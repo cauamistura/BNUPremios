@@ -72,14 +72,32 @@ type UserListResponse struct {
 	Pagination Pagination     `json:"pagination"`
 }
 
-// BuyerWithNumber representa um comprador com o número comprado
+// BuyerWithNumber representa um comprador com a quantidade de números comprados
 type BuyerWithNumber struct {
-	User   UserResponse `json:"user"`
-	Number int          `json:"number"`
+	User         UserResponse `json:"user"`
+	TotalNumbers int          `json:"total_numbers"`
 }
 
 // BuyerListResponse representa a resposta da listagem de compradores
 type BuyerListResponse struct {
 	Buyers     []BuyerWithNumber `json:"buyers"`
 	Pagination Pagination        `json:"pagination"`
+}
+
+// Purchase representa uma compra de números
+type Purchase struct {
+	ID           int       `json:"id"`
+	RewardID     uuid.UUID `json:"rewardId"`
+	RewardName   string    `json:"rewardName"`
+	RewardImage  string    `json:"rewardImage"`
+	Numbers      []int     `json:"numbers"`
+	PurchaseDate time.Time `json:"purchaseDate"`
+	TotalAmount  float64   `json:"totalAmount"`
+	Status       string    `json:"status"`
+}
+
+// PurchaseListResponse representa a resposta da listagem de compras
+type PurchaseListResponse struct {
+	Purchases  []Purchase `json:"purchases"`
+	Pagination Pagination `json:"pagination"`
 }

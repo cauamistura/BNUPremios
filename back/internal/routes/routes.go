@@ -10,7 +10,7 @@ import (
 )
 
 // SetupRoutes configura todas as rotas da aplicação
-func SetupRoutes(router *gin.Engine, userHandler *handlers.UserHandler, rewardHandler *handlers.RewardHandler) {
+func SetupRoutes(router *gin.Engine, userHandler *handlers.UserHandler, rewardHandler *handlers.RewardHandler, jwtSecret string) {
 	// Middleware global
 	router.Use(middleware.CORS())
 	router.Use(middleware.Logger())
@@ -38,12 +38,19 @@ func SetupRoutes(router *gin.Engine, userHandler *handlers.UserHandler, rewardHa
 	{
 		// Rotas de usuários
 		users := api.Group("/users")
+		users.Use(middleware.AuthMiddleware(jwtSecret))
 		{
-			users.POST("/", userHandler.Create)
 			users.GET("/", userHandler.List)
 			users.GET("/:id", userHandler.GetByID)
 			users.PUT("/:id", userHandler.Update)
 			users.DELETE("/:id", userHandler.Delete)
+		}
+
+		// Rotas de compras (protegidas por autenticação)
+		purchases := api.Group("/purchases")
+		purchases.Use(middleware.AuthMiddleware(jwtSecret))
+		{
+			purchases.GET("/user/:user_id", rewardHandler.GetUserPurchases)
 		}
 
 		// Rotas de autenticação
@@ -56,20 +63,25 @@ func SetupRoutes(router *gin.Engine, userHandler *handlers.UserHandler, rewardHa
 		// Rotas de prêmios
 		rewards := api.Group("/rewards")
 		{
-			rewards.POST("/", rewardHandler.Create)
+			// Rotas públicas (sem autenticação)
 			rewards.GET("/", rewardHandler.List)
 			rewards.GET("/:id", rewardHandler.GetByID)
 			rewards.GET("/:id/details", rewardHandler.GetDetailsByID)
-			rewards.PUT("/:id", rewardHandler.Update)
-			rewards.DELETE("/:id", rewardHandler.Delete)
-
-			// Rotas de números disponíveis
-			rewards.GET("/:id/available-numbers", rewardHandler.GetAvailableNumbers)
-
-			// Rotas de compradores
 			rewards.GET("/:id/buyers", rewardHandler.GetBuyers)
-			rewards.POST("/:id/buyers/:user_id", rewardHandler.AddBuyer)
-			rewards.DELETE("/:id/buyers/:user_id", rewardHandler.RemoveBuyer)
+
+			// Rotas protegidas (com autenticação)
+			protectedRewards := rewards.Group("/")
+			protectedRewards.Use(middleware.AuthMiddleware(jwtSecret))
+			{
+				protectedRewards.POST("/", rewardHandler.Create)
+				protectedRewards.PUT("/:id", rewardHandler.Update)
+				protectedRewards.DELETE("/:id", rewardHandler.Delete)
+
+				// Rotas de compradores protegidas
+				protectedRewards.POST("/:id/buyers/:user_id", rewardHandler.AddBuyer)
+				protectedRewards.DELETE("/:id/buyers/:user_id", rewardHandler.RemoveBuyer)
+				protectedRewards.GET("/:id/buyers/:user_id/numbers", rewardHandler.GetUserNumbers)
+			}
 		}
 	}
 }

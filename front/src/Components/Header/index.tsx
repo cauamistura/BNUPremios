@@ -21,7 +21,7 @@ const Header: React.FC = () => {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', paddingRight: '2rem' }}>
         <a href="/MeuPerfil" className="cart-icon cart-icon-mobile">
-          <span className="material-icons">shopping_cart</span>
+          <span className="material-icons">person</span>
           {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
         </a>
         <div className="menu-icon" onClick={toggleMenu}>

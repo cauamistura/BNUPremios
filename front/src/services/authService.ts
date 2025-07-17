@@ -1,6 +1,6 @@
 // Serviço de autenticação para login e registro
 
-const API_URL = 'http://localhost:8080/api/v1/auth';
+const API_URL = '/api/v1/auth';
 
 export interface RegisterPayload {
   name: string;

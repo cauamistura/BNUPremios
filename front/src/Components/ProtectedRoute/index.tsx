@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useRedirectToLogin } from '../../hooks/useRedirectToLogin';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -8,15 +8,15 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
-    const navigate = useNavigate();
+    const { redirectToLogin } = useRedirectToLogin();
 
     console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, 'loading:', loading);
 
     useEffect(() => {
         if (!loading && !isAuthenticated) {
-            navigate('/auth/login');
+            redirectToLogin();
         }
-    }, [loading, isAuthenticated, navigate]);
+    }, [loading, isAuthenticated, redirectToLogin]);
 
     try {
         if (loading) {

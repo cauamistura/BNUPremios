@@ -16,12 +16,13 @@ import (
 
 // UserService implementa a lógica de negócio para usuários
 type UserService struct {
-	userRepo *repository.UserRepository
+	userRepo  *repository.UserRepository
+	jwtSecret string
 }
 
 // NewUserService cria uma nova instância do serviço de usuários
-func NewUserService(userRepo *repository.UserRepository) *UserService {
-	return &UserService{userRepo: userRepo}
+func NewUserService(userRepo *repository.UserRepository, jwtSecret string) *UserService {
+	return &UserService{userRepo: userRepo, jwtSecret: jwtSecret}
 }
 
 // Create cria um novo usuário
@@ -194,14 +195,13 @@ func (s *UserService) Login(loginReq *models.LoginRequest) (*models.LoginRespons
 
 	// Gerar token JWT real (simples, sem validação de segredo forte por enquanto)
 	claims := jwt.MapClaims{
-		"sub": user.ID.String(),
+		"sub":   user.ID.String(),
 		"email": user.Email,
-		"role": user.Role,
-		"exp": time.Now().Add(24 * time.Hour).Unix(),
+		"role":  user.Role,
+		"exp":   time.Now().Add(24 * time.Hour).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	secret := []byte("minha-chave-secreta") // Trocar por uma variável de ambiente em produção
-	tokenString, err := token.SignedString(secret)
+	tokenString, err := token.SignedString([]byte(s.jwtSecret))
 	if err != nil {
 		return nil, errors.New("erro ao gerar token JWT")
 	}
@@ -236,4 +236,4 @@ func (s *UserService) toUserResponse(user *models.User) *models.UserResponse {
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
-} 
+}

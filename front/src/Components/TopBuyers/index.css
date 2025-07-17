@@ -3,9 +3,8 @@
   background: #ededed;
   border-radius: 12px;
   padding: 24px 16px 20px 16px;
-  margin: 32px auto 24px auto;
-  max-width: 95%;
-  display: flex;
+  margin: 32px 15px 24px 15px;
+  max-width: 95%;  
   flex-direction: column;
   align-items: center;
   font-size: 0.97rem;
@@ -36,7 +35,7 @@
   flex-direction: row;
   flex-wrap: nowrap;
   gap: 10px;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: stretch;
   width: 100%;
   overflow-x: auto;
@@ -111,5 +110,73 @@
   }
   .top-buyers-list-container {
     display: flex;    
+  }
+}
+
+/* Estilos para outros participantes */
+.other-buyers-section {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fb;
+  border-radius: 12px;
+  border: 1px solid #ece9f7;
+}
+
+.other-buyers-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #7c3aed;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.other-buyers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.other-buyer-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e3d8fa;
+  font-size: 0.9rem;
+}
+
+.other-buyer-position {
+  font-weight: 600;
+  color: #7c3aed;
+  min-width: 30px;
+}
+
+.other-buyer-name {
+  flex: 1;
+  margin: 0 10px;
+  color: #23213a;
+  font-weight: 500;
+}
+
+.other-buyer-numbers {
+  color: #4a4a68;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .other-buyers-section {
+    margin: 15px 10px;
+    padding: 12px;
+  }
+  
+  .other-buyer-item {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+  
+  .other-buyers-title {
+    font-size: 0.9rem;
   }
 } 

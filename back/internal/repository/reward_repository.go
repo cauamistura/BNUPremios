@@ -131,14 +131,15 @@ func (r *RewardRepository) GetDetailsByID(id uuid.UUID) (*models.RewardDetails, 
 		images = append(images, image)
 	}
 
-	// Buscar compradores com números
+	// Buscar compradores com quantidade de números
 	var buyers []models.BuyerWithNumber
 	buyersQuery := `
-		SELECT u.id, u.name, u.email, u.role, u.active, u.created_at, u.updated_at, rb.number
+		SELECT u.id, u.name, u.email, u.role, u.active, u.created_at, u.updated_at, count(rb.number) as total_numbers
 		FROM users u
 		INNER JOIN reward_buyers rb ON u.id = rb.user_id
 		WHERE rb.reward_id = $1
-		ORDER BY rb.number
+		GROUP BY u.id, u.name, u.email, u.role, u.active, u.created_at, u.updated_at
+		ORDER BY total_numbers DESC
 	`
 	buyerRows, err := r.db.Query(buyersQuery, id)
 	if err != nil {
@@ -151,7 +152,7 @@ func (r *RewardRepository) GetDetailsByID(id uuid.UUID) (*models.RewardDetails, 
 		var user models.User
 		err := buyerRows.Scan(
 			&user.ID, &user.Name, &user.Email, &user.Role,
-			&user.Active, &user.CreatedAt, &user.UpdatedAt, &buyer.Number)
+			&user.Active, &user.CreatedAt, &user.UpdatedAt, &buyer.TotalNumbers)
 		if err != nil {
 			return nil, err
 		}
@@ -293,14 +294,15 @@ func (r *RewardRepository) RemoveBuyer(rewardID, userID uuid.UUID) error {
 	return err
 }
 
-// GetBuyers busca todos os compradores de um prêmio com números
+// GetBuyers busca todos os compradores de um prêmio com quantidade de números
 func (r *RewardRepository) GetBuyers(rewardID uuid.UUID) ([]models.BuyerWithNumber, error) {
 	query := `
-		SELECT u.id, u.name, u.email, u.role, u.active, u.created_at, u.updated_at, rb.number
+		SELECT u.id, u.name, u.email, u.role, u.active, u.created_at, u.updated_at, count(rb.number) as total_numbers
 		FROM users u
 		INNER JOIN reward_buyers rb ON u.id = rb.user_id
 		WHERE rb.reward_id = $1
-		ORDER BY rb.number
+		GROUP BY u.id, u.name, u.email, u.role, u.active, u.created_at, u.updated_at
+		ORDER BY total_numbers DESC
 	`
 
 	rows, err := r.db.Query(query, rewardID)
@@ -315,7 +317,7 @@ func (r *RewardRepository) GetBuyers(rewardID uuid.UUID) ([]models.BuyerWithNumb
 		var user models.User
 		err := rows.Scan(
 			&user.ID, &user.Name, &user.Email, &user.Role,
-			&user.Active, &user.CreatedAt, &user.UpdatedAt, &buyer.Number)
+			&user.Active, &user.CreatedAt, &user.UpdatedAt, &buyer.TotalNumbers)
 		if err != nil {
 			return nil, err
 		}
@@ -334,47 +336,46 @@ func (r *RewardRepository) GetBuyers(rewardID uuid.UUID) ([]models.BuyerWithNumb
 	return buyers, nil
 }
 
-// GetAvailableNumbers busca os números disponíveis para um prêmio
-func (r *RewardRepository) GetAvailableNumbers(rewardID uuid.UUID) ([]int, error) {
-	// Buscar números já comprados
-	query := `SELECT number FROM reward_buyers WHERE reward_id = $1 ORDER BY number`
-	rows, err := r.db.Query(query, rewardID)
+// GetUserNumbers busca os números específicos de um usuário em um prêmio
+func (r *RewardRepository) GetUserNumbers(rewardID, userID uuid.UUID) ([]int, error) {
+	query := `
+		SELECT number
+		FROM reward_buyers
+		WHERE reward_id = $1 AND user_id = $2
+		ORDER BY number
+	`
+
+	rows, err := r.db.Query(query, rewardID, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var takenNumbers []int
+	var numbers []int
 	for rows.Next() {
 		var number int
 		if err := rows.Scan(&number); err != nil {
 			return nil, err
 		}
-		takenNumbers = append(takenNumbers, number)
+		numbers = append(numbers, number)
 	}
 
-	// Buscar detalhes do prêmio para saber a quota mínima
-	var minQuota int
-	detailsQuery := `SELECT min_quota FROM reward_details WHERE reward_id = $1`
-	err = r.db.QueryRow(detailsQuery, rewardID).Scan(&minQuota)
+	return numbers, nil
+}
+
+// GetAvailableNumbers retorna apenas o próximo número disponível para compra
+func (r *RewardRepository) GetMinNumber(rewardID uuid.UUID) (int, error) {
+	// Buscar o maior número já comprado
+	query := `SELECT COALESCE(MAX(number), 0) FROM reward_buyers WHERE reward_id = $1`
+	var maxNumber int
+	err := r.db.QueryRow(query, rewardID).Scan(&maxNumber)
 	if err != nil {
-		return nil, err
+		return 1, err
 	}
 
-	// Gerar números disponíveis (de 1 até min_quota, excluindo os já comprados)
-	availableNumbers := make([]int, 0)
-	takenMap := make(map[int]bool)
-	for _, num := range takenNumbers {
-		takenMap[num] = true
-	}
-
-	for i := 1; i <= minQuota; i++ {
-		if !takenMap[i] {
-			availableNumbers = append(availableNumbers, i)
-		}
-	}
-
-	return availableNumbers, nil
+	// O próximo número disponível é o maior + 1
+	nextNumber := maxNumber + 1
+	return nextNumber, nil
 }
 
 // BuyNumbers compra uma quantidade específica de números para um usuário
@@ -387,17 +388,16 @@ func (r *RewardRepository) BuyNumbers(rewardID, userID uuid.UUID, quantity int) 
 	defer tx.Rollback()
 
 	// Buscar números disponíveis
-	availableNumbers, err := r.GetAvailableNumbers(rewardID)
+	minNumber, err := r.GetMinNumber(rewardID)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(availableNumbers) < quantity {
-		return nil, errors.New("números insuficientes disponíveis")
+	// quero os numeros de minNumber até minNumber + quantity
+	numbersToBuy := make([]int, quantity)
+	for i := 0; i < quantity; i++ {
+		numbersToBuy[i] = minNumber + i
 	}
-
-	// Pegar os primeiros números disponíveis
-	numbersToBuy := availableNumbers[:quantity]
 
 	// Inserir cada número comprado
 	insertQuery := `INSERT INTO reward_buyers (reward_id, user_id, number, created_at) VALUES ($1, $2, $3, NOW())`
@@ -415,4 +415,100 @@ func (r *RewardRepository) BuyNumbers(rewardID, userID uuid.UUID, quantity int) 
 	}
 
 	return numbersToBuy, nil
+}
+
+// GetUserPurchases busca todas as compras de um usuário
+func (r *RewardRepository) GetUserPurchases(userID uuid.UUID, page, limit int) ([]models.Purchase, int, error) {
+	offset := (page - 1) * limit
+
+	// Query para contar total
+	countQuery := `
+		SELECT COUNT(DISTINCT rb.reward_id)
+		FROM reward_buyers rb
+		WHERE rb.user_id = $1
+	`
+	var total int
+	err := r.db.QueryRow(countQuery, userID).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Query para buscar compras com paginação
+	query := `
+		SELECT 
+			r.id as reward_id,
+			r.name as reward_name,
+			r.image as reward_image,
+			MIN(rb.created_at) as purchase_date,
+			COUNT(rb.number) as total_numbers,
+			rd.price as price_per_number,
+			r.completed as reward_completed
+		FROM reward_buyers rb
+		INNER JOIN rewards r ON rb.reward_id = r.id
+		LEFT JOIN reward_details rd ON r.id = rd.reward_id
+		WHERE rb.user_id = $1
+		GROUP BY r.id, r.name, r.image, rd.price, r.completed
+		ORDER BY purchase_date DESC
+		LIMIT $2 OFFSET $3
+	`
+
+	rows, err := r.db.Query(query, userID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var purchases []models.Purchase
+	purchaseID := 1
+
+	for rows.Next() {
+		var purchase models.Purchase
+		var rewardID uuid.UUID
+		var rewardName, rewardImage string
+		var purchaseDate time.Time
+		var totalNumbers int
+		var pricePerNumber sql.NullFloat64
+		var rewardCompleted bool
+
+		err := rows.Scan(
+			&rewardID, &rewardName, &rewardImage, &purchaseDate,
+			&totalNumbers, &pricePerNumber, &rewardCompleted)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		// Buscar os números específicos desta compra
+		numbers, err := r.GetUserNumbers(rewardID, userID)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		// Calcular valor total
+		totalAmount := 0.0
+		if pricePerNumber.Valid {
+			totalAmount = float64(totalNumbers) * pricePerNumber.Float64
+		}
+
+		// Determinar status
+		status := "active"
+		if rewardCompleted {
+			status = "completed"
+		}
+
+		purchase = models.Purchase{
+			ID:           purchaseID,
+			RewardID:     rewardID,
+			RewardName:   rewardName,
+			RewardImage:  rewardImage,
+			Numbers:      numbers,
+			PurchaseDate: purchaseDate,
+			TotalAmount:  totalAmount,
+			Status:       status,
+		}
+
+		purchases = append(purchases, purchase)
+		purchaseID++
+	}
+
+	return purchases, total, nil
 }

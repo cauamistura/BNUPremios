@@ -1,21 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import type { Purchase } from '../../Models/User';
 import { useAuth } from '../../hooks/useAuth';
-import userProfileData from '../../assets/Mocks/UserProfile.json';
+import { purchasesService } from '../../services/purchasesService';
 import './index.css';
 
 const Profile: React.FC = () => {
-    const { user: authUser, logout } = useAuth();
+    const { user: authUser, logout, loading: authLoading } = useAuth();
     const [purchases, setPurchases] = useState<Purchase[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Simulando carregamento de dados
-        setTimeout(() => {
-            setPurchases(userProfileData.purchases as Purchase[]);
+        const fetchUserPurchases = async () => {
+            if (!authUser?.id) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await purchasesService.getUserPurchases(authUser.id);
+                setPurchases(response.purchases);
+            } catch (err) {
+                setError('Erro ao carregar suas compras. Tente novamente.');
+                console.error('Erro ao buscar compras do usuário:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        // Só busca as compras se a autenticação não estiver carregando e o usuário existir
+        if (!authLoading && authUser?.id) {
+            fetchUserPurchases();
+        } else if (!authLoading && !authUser) {
             setLoading(false);
-        }, 500);
-    }, []);
+        }
+    }, [authUser?.id, authLoading]);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -47,10 +68,29 @@ const Profile: React.FC = () => {
         return new Date(dateString).toLocaleDateString('pt-BR');
     };
 
-    if (loading) {
+    if (authLoading || loading) {
         return (
             <div className="profile-container">
-                <div className="profile-loading">Carregando...</div>
+                <div className="profile-loading-container">
+                    <div className="profile-loading-spinner"></div>
+                    <p>{authLoading ? 'Carregando dados do usuário...' : 'Carregando suas compras...'}</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="profile-container">
+                <div className="profile-error-container">
+                    <p className="profile-error-message">{error}</p>
+                    <button 
+                        className="profile-error-reload-btn" 
+                        onClick={() => window.location.reload()}
+                    >
+                        Tentar novamente
+                    </button>
+                </div>
             </div>
         );
     }
@@ -58,7 +98,9 @@ const Profile: React.FC = () => {
     if (!authUser) {
         return (
             <div className="profile-container">
-                <div className="profile-error">Erro ao carregar dados do usuário</div>
+                <div className="profile-error-container">
+                    <p className="profile-error-message">Erro ao carregar dados do usuário</p>
+                </div>
             </div>
         );
     }
@@ -68,9 +110,7 @@ const Profile: React.FC = () => {
 
             {/* Seção de informações do usuário */}
             <div className="profile-user-info-section">
-                <div className="profile-user-avatar">
-                    <img src={authUser.avatar} alt={authUser.name} />
-                </div>
+                
                 <div className="profile-user-details">
                     <h2>{authUser.name}</h2>
                     <div className="profile-user-info-grid">
@@ -78,14 +118,18 @@ const Profile: React.FC = () => {
                             <span className="profile-label">Email:</span>
                             <span className="profile-value">{authUser.email}</span>
                         </div>
-                        <div className="profile-info-item">
-                            <span className="profile-label">Telefone:</span>
-                            <span className="profile-value">{authUser.phone}</span>
-                        </div>
-                        <div className="profile-info-item">
-                            <span className="profile-label">Membro desde:</span>
-                            <span className="profile-value">{formatDate(authUser.joinDate)}</span>
-                        </div>
+                        {authUser.phone && (
+                            <div className="profile-info-item">
+                                <span className="profile-label">Telefone:</span>
+                                <span className="profile-value">{authUser.phone}</span>
+                            </div>
+                        )}
+                        {authUser.joinDate && (
+                            <div className="profile-info-item">
+                                <span className="profile-label">Membro desde:</span>
+                                <span className="profile-value">{formatDate(authUser.joinDate)}</span>
+                            </div>
+                        )}
                         <div className="profile-info-item">
                             <button 
                                 onClick={logout}

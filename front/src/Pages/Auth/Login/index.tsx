@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './index.css';
 
 const LoginPage: React.FC = () => {
@@ -10,6 +10,10 @@ const LoginPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Pegar a rota de retorno do estado de navegação ou usar '/' como padrão
+    const from = (location.state as any)?.from?.pathname || '/';
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -18,7 +22,7 @@ const LoginPage: React.FC = () => {
         try {
             const success = await login(email, password);
             if (success) {
-                navigate('/profile'); // Redireciona para a página de profile
+                navigate(from);
             } else {
                 setError('Email ou senha incorretos');
             }

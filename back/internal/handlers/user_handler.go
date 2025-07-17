@@ -18,52 +18,17 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
-// Create godoc
-// @Summary Criar um novo usuário
-// @Description Cria um novo usuário no sistema
-// @Tags users
-// @Accept json
-// @Produce json
-// @Param user body models.User true "Dados do usuário"
-// @Success 201 {object} models.UserResponse
-// @Failure 400 {object} map[string]interface{}
-// @Failure 409 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
-// @Router /users [post]
-func (h *UserHandler) Create(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Dados inválidos",
-			"details": err.Error(),
-		})
-		return
-	}
-
-	userResponse, err := h.userService.Create(&user)
-	if err != nil {
-		status := http.StatusInternalServerError
-		if err.Error() == "email já está em uso" {
-			status = http.StatusConflict
-		}
-		c.JSON(status, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusCreated, userResponse)
-}
-
 // GetByID godoc
 // @Summary Buscar usuário por ID
-// @Description Busca um usuário específico pelo ID
+// @Description Busca um usuário específico pelo ID (requer autenticação)
 // @Tags users
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path string true "ID do usuário"
 // @Success 200 {object} models.UserResponse
 // @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
 // @Failure 404 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /users/{id} [get]
@@ -89,13 +54,15 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 
 // List godoc
 // @Summary Listar usuários
-// @Description Lista todos os usuários com paginação
+// @Description Lista todos os usuários com paginação (requer autenticação)
 // @Tags users
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param page query int false "Número da página (padrão: 1)"
 // @Param limit query int false "Limite por página (padrão: 10, máximo: 100)"
 // @Success 200 {object} models.UserListResponse
+// @Failure 401 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /users [get]
 func (h *UserHandler) List(c *gin.Context) {
@@ -115,14 +82,16 @@ func (h *UserHandler) List(c *gin.Context) {
 
 // Update godoc
 // @Summary Atualizar usuário
-// @Description Atualiza os dados de um usuário específico
+// @Description Atualiza os dados de um usuário específico (requer autenticação)
 // @Tags users
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path string true "ID do usuário"
 // @Param user body models.UpdateUserRequest true "Dados para atualização"
 // @Success 200 {object} models.UserResponse
 // @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
 // @Failure 404 {object} map[string]interface{}
 // @Failure 409 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
@@ -161,13 +130,15 @@ func (h *UserHandler) Update(c *gin.Context) {
 
 // Delete godoc
 // @Summary Deletar usuário
-// @Description Remove um usuário do sistema
+// @Description Remove um usuário do sistema (requer autenticação)
 // @Tags users
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path string true "ID do usuário"
 // @Success 204 "Usuário deletado com sucesso"
 // @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
 // @Failure 404 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /users/{id} [delete]
@@ -263,4 +234,4 @@ func (h *UserHandler) Register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, userResponse)
-} 
+}

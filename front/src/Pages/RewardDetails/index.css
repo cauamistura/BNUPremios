@@ -345,3 +345,120 @@
 .reward-details-error-reload-btn:hover {
   background-color: #6d28d9;
 }
+
+/* Modal de confirmação */
+.reward-confirmation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.reward-confirmation-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.reward-confirmation-modal h3 {
+  color: #23213a;
+  font-size: 1.4rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.reward-confirmation-details {
+  margin-bottom: 25px;
+  text-align: left;
+}
+
+.reward-confirmation-details p {
+  margin: 10px 0;
+  color: #4a4a68;
+  font-size: 1rem;
+}
+
+.reward-confirmation-details strong {
+  color: #23213a;
+  font-weight: 600;
+}
+
+.reward-confirmation-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.reward-confirm-btn {
+  background: #7c3aed;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.reward-confirm-btn:hover:not(:disabled) {
+  background: #6d28d9;
+}
+
+.reward-confirm-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.reward-cancel-btn {
+  background: #e5e7eb;
+  color: #374151;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.reward-cancel-btn:hover:not(:disabled) {
+  background: #d1d5db;
+}
+
+.reward-cancel-btn:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .reward-confirmation-modal {
+    padding: 20px;
+    margin: 10px;
+  }
+  
+  .reward-confirmation-modal h3 {
+    font-size: 1.2rem;
+  }
+  
+  .reward-confirmation-actions {
+    flex-direction: column;
+  }
+  
+  .reward-confirm-btn,
+  .reward-cancel-btn {
+    width: 100%;
+  }
+}

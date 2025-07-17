@@ -1,12 +1,4 @@
 {
-  "user": {
-    "id": 1,
-    "name": "João Silva",
-    "email": "joao.silva@email.com",
-    "phone": "(11) 99999-9999",
-    "avatar": "https://via.placeholder.com/150/4A90E2/FFFFFF?text=JS",
-    "joinDate": "2024-01-15"
-  },
   "purchases": [
     {
       "id": 1,

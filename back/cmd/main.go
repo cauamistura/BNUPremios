@@ -1,6 +1,6 @@
 // @title           BNUPremios API
 // @version         1.0
-// @description     API para gerenciamento de usuários do BNUPremios
+// @description     API para gerenciamento de prêmios e usuários do BNUPremios. Rotas públicas: listar prêmios, detalhes e compradores. Rotas protegidas: gerenciamento de usuários, criação/edição de prêmios, compra de números e listagem de compras.
 // @termsOfService  http://swagger.io/terms/
 
 // @contact.name   API Support
@@ -54,7 +54,7 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 
 	// Configurar serviços
-	userService := services.NewUserService(userRepo)
+	userService := services.NewUserService(userRepo, cfg.JWT.Secret)
 
 	// Configurar handlers
 	userHandler := handlers.NewUserHandler(userService)
@@ -68,7 +68,7 @@ func main() {
 	router := gin.Default()
 
 	// Configurar rotas
-	routes.SetupRoutes(router, userHandler, rewardHandler)
+	routes.SetupRoutes(router, userHandler, rewardHandler, cfg.JWT.Secret)
 
 	// Iniciar servidor
 	port := os.Getenv("API_PORT")
@@ -79,4 +79,4 @@ func main() {
 	log.Printf("Servidor iniciado na porta %s", port)
 	log.Printf("Acesse http://localhost:%s/swagger/index.html para a documentação", port)
 	log.Fatal(router.Run(":" + port))
-} 
+}

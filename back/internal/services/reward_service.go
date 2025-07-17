@@ -194,22 +194,6 @@ func (s *RewardService) GetBuyers(rewardID uuid.UUID) ([]models.BuyerWithNumber,
 	return buyers, nil
 }
 
-// GetAvailableNumbers busca os números disponíveis para um prêmio
-func (s *RewardService) GetAvailableNumbers(rewardID uuid.UUID) ([]int, error) {
-	// Verificar se o prêmio existe
-	_, err := s.rewardRepo.GetByID(rewardID)
-	if err != nil {
-		return nil, errors.New("prêmio não encontrado")
-	}
-
-	availableNumbers, err := s.rewardRepo.GetAvailableNumbers(rewardID)
-	if err != nil {
-		return nil, fmt.Errorf("erro ao buscar números disponíveis: %w", err)
-	}
-
-	return availableNumbers, nil
-}
-
 // BuyNumbers compra uma quantidade específica de números para um usuário
 func (s *RewardService) BuyNumbers(rewardID, userID uuid.UUID, quantity int) ([]int, error) {
 	// Verificar se o prêmio existe
@@ -228,6 +212,59 @@ func (s *RewardService) BuyNumbers(rewardID, userID uuid.UUID, quantity int) ([]
 	}
 
 	return numbers, nil
+}
+
+// GetUserNumbers busca os números específicos de um usuário em um prêmio
+func (s *RewardService) GetUserNumbers(rewardID, userID uuid.UUID) ([]int, error) {
+	// Verificar se o prêmio existe
+	_, err := s.rewardRepo.GetByID(rewardID)
+	if err != nil {
+		return nil, errors.New("prêmio não encontrado")
+	}
+
+	numbers, err := s.rewardRepo.GetUserNumbers(rewardID, userID)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao buscar números do usuário: %w", err)
+	}
+
+	return numbers, nil
+}
+
+// GetUserPurchases busca todas as compras de um usuário
+func (s *RewardService) GetUserPurchases(userID uuid.UUID, page, limit int) (*models.PurchaseListResponse, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	purchases, total, err := s.rewardRepo.GetUserPurchases(userID, page, limit)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao buscar compras do usuário: %w", err)
+	}
+
+	// Calcular paginação
+	pages := (total + limit - 1) / limit
+	hasNext := page < pages
+	hasPrev := page > 1
+
+	pagination := models.Pagination{
+		Page:    page,
+		Limit:   limit,
+		Total:   total,
+		Pages:   pages,
+		HasNext: hasNext,
+		HasPrev: hasPrev,
+	}
+
+	return &models.PurchaseListResponse{
+		Purchases:  purchases,
+		Pagination: pagination,
+	}, nil
 }
 
 // toRewardResponse converte Reward para RewardResponse
