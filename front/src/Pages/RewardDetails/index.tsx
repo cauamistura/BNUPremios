@@ -3,12 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import type { RewardDetails } from '../../Models/Reaward';
 import { rewardsService } from '../../services/rewardsService';
 import { useAuth } from '../../hooks/useAuth';
-import { useToast } from '../../hooks/useToast';
+import { useToastContext } from '../../contexts/ToastContext';
 import { useRedirectToLogin } from '../../hooks/useRedirectToLogin';
 import './index.css';
 import ImageCarousel from '../../Components/ImageCarousel';
 import TopBuyers from '../../Components/TopBuyers';
-import ToastContainer from '../../Components/ToastContainer';
 import { formatDate } from '../../utils/formatDate';
 import QuotaSelector from '../../Components/QuotaSelector';
 
@@ -17,10 +16,9 @@ export default function RewardDetails() {
     const navigate = useNavigate();
     const { user: authUser } = useAuth();
     const { redirectToLogin } = useRedirectToLogin();
-    const { toasts, removeToast, showSuccess, showError, showWarning } = useToast();
+    const { showSuccess, showError, showWarning } = useToastContext();
     const [reward, setReward] = useState<RewardDetails | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [selectedQuantity, setSelectedQuantity] = useState(1);
     const [buying, setBuying] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
@@ -31,12 +29,12 @@ export default function RewardDetails() {
             
             try {
                 setLoading(true);
-                setError(null);
                 const data = await rewardsService.getRewardDetails(id);
                 setReward(data);
                 setSelectedQuantity(data.min_quota);
             } catch (err) {
-                setError('Erro ao carregar os detalhes do prêmio. Tente novamente.');
+                const errorMessage = 'Erro ao carregar os detalhes do prêmio. Tente novamente.';
+                showError(errorMessage);
                 console.error('Erro ao buscar detalhes do prêmio:', err);
             } finally {
                 setLoading(false);
@@ -73,7 +71,6 @@ export default function RewardDetails() {
 
         try {
             setBuying(true);
-            setError(null);
             
             const result = await rewardsService.buyNumbers(reward.id, authUser.id, selectedQuantity);
             
@@ -101,20 +98,6 @@ export default function RewardDetails() {
             <div className="reward-details-loading-container">
                 <div className="reward-details-loading-spinner"></div>
                 <p>Carregando detalhes do prêmio...</p>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="reward-details-error-container">
-                <p className="reward-details-error-message">{error}</p>
-                <button 
-                    className="reward-details-error-reload-btn" 
-                    onClick={() => window.location.reload()}
-                >
-                    Tentar novamente
-                </button>
             </div>
         );
     }
@@ -150,27 +133,51 @@ export default function RewardDetails() {
                                 <span className={`status-badge ${reward.completed ? 'completed' : 'pending'}`}> 
                                     {reward.completed ? 'Sorteado' : 'Disponível'}
                                 </span>
-                            </div>                            
-                        </div>
-                        <div className="reward-price-box">
-                            <div className="reward-price-sober">
-                                Preço por cota: <span>R$ {reward.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                             </div>
-                            <QuotaSelector 
-                                price={reward.price} 
-                                minQuota={reward.min_quota} 
-                                onChange={handleQuantityChange}
-                            />
+                            
+                            {/* Mostrar ganhador quando o prêmio estiver sorteado */}
+                            {reward.completed && reward.winner_user && (
+                                <div className="reward-winner-info">
+                                    <h3>🎉 Ganhador do Sorteio</h3>
+                                    <div className="winner-details">
+                                        <p><strong>Nome:</strong> {reward.winner_user.name}</p>
+                                        <p><strong>Email:</strong> {reward.winner_user.email}</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <div className="reward-details-actions">
-                            <button 
-                                className="participate-button"
-                                onClick={handleParticipateClick}
-                                disabled={buying}
-                            >
-                                {buying ? 'Processando...' : 'Participar do Sorteio'}
-                            </button>
-                        </div>
+                        
+                        {/* Mostrar informações de compra apenas se o prêmio não estiver sorteado */}
+                        {!reward.completed && (
+                            <>
+                                <div className="reward-price-box">
+                                    <div className="reward-price-sober">
+                                        Preço por cota: <span>R$ {reward.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <QuotaSelector 
+                                        price={reward.price} 
+                                        minQuota={reward.min_quota} 
+                                        onChange={handleQuantityChange}
+                                    />
+                                </div>
+                                <div className="reward-details-actions">
+                                    <button 
+                                        className="participate-button"
+                                        onClick={handleParticipateClick}
+                                        disabled={buying}
+                                    >
+                                        {buying ? 'Processando...' : 'Participar do Sorteio'}
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                        
+                        {/* Mostrar mensagem quando o prêmio estiver sorteado */}
+                        {reward.completed && (
+                            <div className="reward-completed-message">
+                                <p>🎯 Este sorteio já foi realizado. Obrigado por participar!</p>
+                            </div>
+                        )}
                     </div>
                     
                     {reward.buyers && Array.isArray(reward.buyers) && reward.buyers.length > 0 && (
@@ -208,9 +215,6 @@ export default function RewardDetails() {
                     </div>
                 </div>
             )}
-
-            {/* Toast Container */}
-            <ToastContainer toasts={toasts} onRemove={removeToast} />
         </div>
     );
 } 

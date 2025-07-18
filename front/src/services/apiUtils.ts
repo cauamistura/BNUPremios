@@ -16,6 +16,16 @@ export const getAuthHeaders = (): HeadersInit => {
   };
 };
 
+// Função para fazer logout quando token expirar
+const handleTokenExpired = () => {
+  // Limpar dados de autenticação
+  localStorage.removeItem('user');
+  localStorage.removeItem('token');
+  
+  // Redirecionar para login
+  window.location.href = '/auth/login';
+};
+
 // Função para fazer requisições autenticadas
 export const authenticatedFetch = async (
   endpoint: string,
@@ -34,7 +44,17 @@ export const authenticatedFetch = async (
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Erro na requisição: ${response.status}`);
+    const errorMessage = errorData.message || `Erro na requisição: ${response.status}`;
+    
+    // Verificar se é erro de token expirado
+    if (errorMessage.includes('token is expired') || 
+        errorMessage.includes('token has invalid claims') ||
+        response.status === 401) {
+      console.log('Token expirado detectado, fazendo logout...');
+      handleTokenExpired();
+    }
+    
+    throw new Error(errorMessage);
   }
 
   return response;

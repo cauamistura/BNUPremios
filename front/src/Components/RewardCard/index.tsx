@@ -8,9 +8,10 @@ interface RewardCardProps {
     routeItem: String;
     onEdit?: (reward: Reward) => void;
     onDelete?: (reward: Reward) => void;
+    onDraw?: (reward: Reward) => void;
 }
 
-const RewardCard: React.FC<RewardCardProps> = ({ reward, routeItem, onEdit, onDelete}) => {
+const RewardCard: React.FC<RewardCardProps> = ({ reward, routeItem, onEdit, onDelete, onDraw}) => {
     const navigate = useNavigate();
     
     const formatDate = (date: string) => {
@@ -41,6 +42,13 @@ const RewardCard: React.FC<RewardCardProps> = ({ reward, routeItem, onEdit, onDe
         }
     };
 
+    const handleDrawClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (onDraw) {
+            onDraw(reward);
+        }
+    };
+
     return (
         <div className="reward-card" onClick={handleCardClick}>
             {onEdit && (
@@ -59,6 +67,15 @@ const RewardCard: React.FC<RewardCardProps> = ({ reward, routeItem, onEdit, onDe
                     title="Excluir prêmio"
                 >
                     🗑️
+                </button>
+            )}
+            {onDraw && !reward.completed && (
+                <button 
+                    className="draw-button"
+                    onClick={handleDrawClick}
+                    title="Realizar sorteio"
+                >
+                    🎲
                 </button>
             )}
             <div className="reward-image">

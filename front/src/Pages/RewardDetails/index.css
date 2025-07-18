@@ -109,15 +109,65 @@
 }
 
 .reward-details-date {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  font-size: 0.93rem;
-  color: #23213a;
-  font-weight: 500;
-  margin-bottom: 0;
-  gap: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+/* Estilos para a seção do ganhador */
+.reward-winner-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    color: white;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.reward-winner-info h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.4rem;
+    text-align: center;
+    color: white;
+}
+
+.winner-details {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.winner-details p {
+    margin: 8px 0;
+    font-size: 1rem;
+    color: white;
+}
+
+.winner-details strong {
+    color: #ffd700;
+    font-weight: 600;
+}
+
+/* Estilos para a mensagem de sorteio concluído */
+.reward-completed-message {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+    color: white;
+    box-shadow: 0 8px 25px rgba(240, 147, 251, 0.3);
+}
+
+.reward-completed-message p {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: white;
 }
 
 .status-badge {

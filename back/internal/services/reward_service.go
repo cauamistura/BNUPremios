@@ -112,12 +112,34 @@ func (s *RewardService) List(page, limit int, search string) (*models.RewardList
 	}, nil
 }
 
+// Draw realiza o sorteio de um prêmio
+func (s *RewardService) Draw(rewardID uuid.UUID) (*models.DrawRewardResponse, error) {
+	// Verificar se o prêmio existe
+	_, err := s.rewardRepo.GetByID(rewardID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Realizar o sorteio
+	result, err := s.rewardRepo.DrawReward(rewardID)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao realizar sorteio: %w", err)
+	}
+
+	return result, nil
+}
+
 // Update atualiza um prêmio
 func (s *RewardService) Update(id uuid.UUID, req *models.UpdateRewardRequest) (*models.RewardResponse, error) {
 	// Verificar se o prêmio existe
-	_, err := s.rewardRepo.GetByID(id)
+	reward, err := s.rewardRepo.GetByID(id)
 	if err != nil {
 		return nil, err
+	}
+
+	// Verificar se o prêmio já foi sorteado
+	if reward.WinnerNumber != nil {
+		return nil, errors.New("não é possível editar um prêmio que já foi sorteado")
 	}
 
 	// Construir map de atualizações
@@ -164,9 +186,14 @@ func (s *RewardService) Update(id uuid.UUID, req *models.UpdateRewardRequest) (*
 // Delete remove um prêmio
 func (s *RewardService) Delete(id uuid.UUID) error {
 	// Verificar se o prêmio existe
-	_, err := s.rewardRepo.GetByID(id)
+	reward, err := s.rewardRepo.GetByID(id)
 	if err != nil {
 		return err
+	}
+
+	// Verificar se o prêmio já foi sorteado
+	if reward.WinnerNumber != nil {
+		return errors.New("não é possível deletar um prêmio que já foi sorteado")
 	}
 
 	if err := s.rewardRepo.Delete(id); err != nil {
@@ -224,6 +251,9 @@ func (s *RewardService) BuyNumbers(rewardID, userID uuid.UUID, quantity int) ([]
 
 	numbers, err := s.rewardRepo.BuyNumbers(rewardID, userID, quantity)
 	if err != nil {
+		if err.Error() == "não é possível comprar números de um prêmio já completado" {
+			return nil, err
+		}
 		return nil, fmt.Errorf("erro ao comprar números: %w", err)
 	}
 
@@ -349,6 +379,7 @@ func (s *RewardService) toRewardDetailsResponse(rewardDetails *models.RewardDeta
 		Price:          rewardDetails.Price,
 		MinQuota:       rewardDetails.MinQuota,
 		Buyers:         rewardDetails.Buyers,
+		WinnerUser:     rewardDetails.WinnerUser,
 	}
 }
 
@@ -361,6 +392,7 @@ func (s *RewardService) ToRewardDetailsWithoutBuyersResponse(rewardDetails *mode
 		Images:         rewardDetails.Images,
 		Price:          rewardDetails.Price,
 		MinQuota:       rewardDetails.MinQuota,
+		WinnerUser:     rewardDetails.WinnerUser,
 	}
 }
 

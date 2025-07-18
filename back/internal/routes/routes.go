@@ -82,6 +82,7 @@ func SetupRoutes(router *gin.Engine, userHandler *handlers.UserHandler, rewardHa
 				protectedRewards.POST("/:id/buyers/:user_id", rewardHandler.AddBuyer)
 				protectedRewards.DELETE("/:id/buyers/:user_id", rewardHandler.RemoveBuyer)
 				protectedRewards.GET("/:id/buyers/:user_id/numbers", rewardHandler.GetUserNumbers)
+				protectedRewards.POST("/:id/draw", rewardHandler.Draw)
 			}
 		}
 	}

@@ -10,6 +10,7 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<boolean>;
     register: (payload: RegisterPayload) => Promise<boolean>;
     logout: () => void;
+    logoutAndRedirect: () => void;
     loading: boolean;
 }
 
@@ -68,6 +69,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
+    };
+
+    const logoutAndRedirect = () => {
+        logout();
+        // Redirecionar para login
+        window.location.href = '/auth/login';
     };
 
     const value: AuthContextType = {
@@ -76,6 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         login,
         register,
         logout,
+        logoutAndRedirect,
         loading
     };
 

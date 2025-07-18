@@ -97,3 +97,28 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+/* Estilos para o modal de resultado do sorteio */
+.draw-result-content {
+    text-align: left;
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+}
+
+.draw-result-content p {
+    margin: 8px 0;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.draw-result-content strong {
+    color: #2D1B4E;
+}
+
+/* Estilo especial para o título do modal de sorteio */
+.delete-confirmation-modal h3:has(+ .draw-result-content) {
+    color: #28a745;
+}

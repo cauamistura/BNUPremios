@@ -18,6 +18,15 @@ export interface Reward {
 // Objeto para detalhes do prêmio com compradores
 export interface RewardDetails extends Reward {
     buyers: Buyer[] | null;
+    winner_user?: {
+        id: string;
+        name: string;
+        email: string;
+        role: string;
+        active: boolean;
+        created_at: string;
+        updated_at: string;
+    };
 }
 
 export interface Pagination {
@@ -32,4 +41,21 @@ export interface Pagination {
 export interface RewardsResponse {
     rewards: Reward[];
     pagination: Pagination;
+}
+
+// Interface para a resposta do sorteio
+export interface DrawResponse {
+    drawn_at: string;
+    message: string;
+    reward_id: string;
+    winner_number: number;
+    winner_user: {
+        active: boolean;
+        created_at: string;
+        email: string;
+        id: string;
+        name: string;
+        role: string;
+        updated_at: string;
+    };
 }

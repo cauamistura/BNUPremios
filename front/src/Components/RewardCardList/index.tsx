@@ -8,9 +8,10 @@ interface RewardCardListProps {
     routeItem: String;
     onEdit?: (reward: Reward) => void;
     onDelete?: (reward: Reward) => void;
+    onDraw?: (reward: Reward) => void;
 }
 
-const RewardCardList: React.FC<RewardCardListProps> = ({ rewards, routeItem, onEdit, onDelete }) => {
+const RewardCardList: React.FC<RewardCardListProps> = ({ rewards, routeItem, onEdit, onDelete, onDraw }) => {
     // Verificação de segurança
     if (!rewards || !Array.isArray(rewards) || rewards.length === 0) {
         return null;
@@ -25,6 +26,7 @@ const RewardCardList: React.FC<RewardCardListProps> = ({ rewards, routeItem, onE
                     routeItem={routeItem}
                     onEdit={onEdit}
                     onDelete={onDelete}
+                    onDraw={onDraw}
                 />
             ))}
         </div>

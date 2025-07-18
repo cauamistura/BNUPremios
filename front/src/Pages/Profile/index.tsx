@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import type { Purchase } from '../../Models/User';
 import { useAuth } from '../../hooks/useAuth';
 import { purchasesService } from '../../services/purchasesService';
+import { useToastContext } from '../../contexts/ToastContext';
 import './index.css';
 
 const Profile: React.FC = () => {
     const { user: authUser, logout, loading: authLoading } = useAuth();
+    const { showError } = useToastContext();
     const [purchases, setPurchases] = useState<Purchase[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchUserPurchases = async () => {
@@ -19,11 +20,11 @@ const Profile: React.FC = () => {
 
             try {
                 setLoading(true);
-                setError(null);
                 const response = await purchasesService.getUserPurchases(authUser.id);
                 setPurchases(response.purchases);
             } catch (err) {
-                setError('Erro ao carregar suas compras. Tente novamente.');
+                const errorMessage = 'Erro ao carregar suas compras. Tente novamente.';
+                showError(errorMessage);
                 console.error('Erro ao buscar compras do usuário:', err);
             } finally {
                 setLoading(false);
@@ -74,22 +75,6 @@ const Profile: React.FC = () => {
                 <div className="profile-loading-container">
                     <div className="profile-loading-spinner"></div>
                     <p>{authLoading ? 'Carregando dados do usuário...' : 'Carregando suas compras...'}</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="profile-container">
-                <div className="profile-error-container">
-                    <p className="profile-error-message">{error}</p>
-                    <button 
-                        className="profile-error-reload-btn" 
-                        onClick={() => window.location.reload()}
-                    >
-                        Tentar novamente
-                    </button>
                 </div>
             </div>
         );

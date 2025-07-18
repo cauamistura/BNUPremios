@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -88,34 +89,42 @@ func (r *RewardRepository) Create(reward *models.Reward, price float64, minQuota
 // GetByID busca um prêmio por ID
 func (r *RewardRepository) GetByID(id uuid.UUID) (*models.Reward, error) {
 	query := `
-		SELECT id, owner_id, name, description, image, draw_date, completed, created_at, updated_at
-		FROM rewards WHERE id = $1
+		SELECT id, owner_id, name, description, image, draw_date, completed, winner_number, drawn_at, created_at, updated_at
+		FROM rewards
+		WHERE id = $1
 	`
 
-	reward := &models.Reward{}
+	var reward models.Reward
 	err := r.db.QueryRow(query, id).Scan(
-		&reward.ID, &reward.OwnerID, &reward.Name, &reward.Description, &reward.Image,
-		&reward.DrawDate, &reward.Completed, &reward.CreatedAt, &reward.UpdatedAt)
-
+		&reward.ID, &reward.OwnerID, &reward.Name, &reward.Description,
+		&reward.Image, &reward.DrawDate, &reward.Completed, &reward.WinnerNumber, &reward.DrawnAt,
+		&reward.CreatedAt, &reward.UpdatedAt,
+	)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("prêmio não encontrado")
-		}
 		return nil, err
 	}
 
-	return reward, nil
+	return &reward, nil
 }
 
 // GetDetailsByID busca os detalhes completos de um prêmio
 func (r *RewardRepository) GetDetailsByID(id uuid.UUID) (*models.RewardDetails, error) {
-	// Buscar o prêmio básico
+	// Buscar dados básicos do prêmio
 	reward, err := r.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	// Buscar imagens adicionais
+	// Buscar detalhes (price e min_quota)
+	var price float64
+	var minQuota int
+	detailsQuery := `SELECT price, min_quota FROM reward_details WHERE reward_id = $1`
+	err = r.db.QueryRow(detailsQuery, id).Scan(&price, &minQuota)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	// Buscar imagens
 	var images []string
 	imagesQuery := `SELECT image_url FROM reward_images WHERE reward_id = $1 ORDER BY created_at`
 	rows, err := r.db.Query(imagesQuery, id)
@@ -132,95 +141,60 @@ func (r *RewardRepository) GetDetailsByID(id uuid.UUID) (*models.RewardDetails, 
 		images = append(images, image)
 	}
 
-	// Buscar compradores com quantidade de números
-	var buyers []models.BuyerWithNumber
-	buyersQuery := `
-		SELECT u.id, u.name, u.email, u.role, u.active, u.created_at, u.updated_at, count(rb.number) as total_numbers
-		FROM users u
-		INNER JOIN reward_buyers rb ON u.id = rb.user_id
-		WHERE rb.reward_id = $1
-		GROUP BY u.id, u.name, u.email, u.role, u.active, u.created_at, u.updated_at
-		ORDER BY total_numbers DESC
-	`
-	buyerRows, err := r.db.Query(buyersQuery, id)
+	// Buscar compradores
+	buyers, err := r.GetBuyers(id)
 	if err != nil {
 		return nil, err
 	}
-	defer buyerRows.Close()
 
-	for buyerRows.Next() {
-		var buyer models.BuyerWithNumber
-		var user models.User
-		err := buyerRows.Scan(
-			&user.ID, &user.Name, &user.Email, &user.Role,
-			&user.Active, &user.CreatedAt, &user.UpdatedAt, &buyer.TotalNumbers)
-		if err != nil {
-			return nil, err
+	// Buscar ganhador se o prêmio foi sorteado
+	var winnerUser *models.UserResponse
+	if reward.WinnerNumber != nil {
+		winner, err := r.GetWinnerByNumber(id, *reward.WinnerNumber)
+		if err == nil {
+			winnerUser = &models.UserResponse{
+				ID:        winner.ID,
+				Name:      winner.Name,
+				Email:     winner.Email,
+				Role:      winner.Role,
+				Active:    winner.Active,
+				CreatedAt: winner.CreatedAt,
+				UpdatedAt: winner.UpdatedAt,
+			}
 		}
-		buyer.User = models.UserResponse{
-			ID:        user.ID,
-			Name:      user.Name,
-			Email:     user.Email,
-			Role:      user.Role,
-			Active:    user.Active,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
-		}
-		buyers = append(buyers, buyer)
 	}
 
-	// Buscar preço e quota mínima
-	var price float64
-	var minQuota int
-	detailsQuery := `SELECT price, min_quota FROM reward_details WHERE reward_id = $1`
-	err = r.db.QueryRow(detailsQuery, id).Scan(&price, &minQuota)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return nil, err
-	}
-
-	rewardDetails := &models.RewardDetails{
-		Reward:   *reward,
-		Images:   images,
-		Price:    price,
-		MinQuota: minQuota,
-		Buyers:   buyers,
-	}
-
-	return rewardDetails, nil
+	return &models.RewardDetails{
+		Reward:     *reward,
+		Images:     images,
+		Price:      price,
+		MinQuota:   minQuota,
+		Buyers:     buyers,
+		WinnerUser: winnerUser,
+	}, nil
 }
 
 // List busca todos os prêmios com paginação
 func (r *RewardRepository) List(page, limit int, search string) ([]models.Reward, int, error) {
 	offset := (page - 1) * limit
 
-	// Query base
-	baseQuery := `FROM rewards WHERE 1=1`
-	args := []interface{}{}
-	argCount := 1
-
-	// Adicionar filtro de busca se fornecido
-	if search != "" {
-		baseQuery += fmt.Sprintf(" AND (name ILIKE $%d OR description ILIKE $%d)", argCount, argCount)
-		args = append(args, "%"+search+"%")
-		argCount++
-	}
-
 	// Query para contar total
-	countQuery := `SELECT COUNT(*) ` + baseQuery
+	countQuery := `SELECT COUNT(*) FROM rewards`
 	var total int
-	err := r.db.QueryRow(countQuery, args...).Scan(&total)
+	err := r.db.QueryRow(countQuery).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// Query para buscar dados
-	selectQuery := `
-		SELECT id, owner_id, name, description, image, draw_date, completed, created_at, updated_at
-		` + baseQuery + ` ORDER BY created_at DESC LIMIT $` + fmt.Sprintf("%d", argCount) + ` OFFSET $` + fmt.Sprintf("%d", argCount+1)
+	// Query para buscar prêmios
+	query := `
+		SELECT id, owner_id, name, description, image, draw_date, completed, winner_number, drawn_at, created_at, updated_at
+		FROM rewards
+		ORDER BY created_at DESC
+		LIMIT $1 OFFSET $2
+	`
 
-	args = append(args, limit, offset)
-
-	rows, err := r.db.Query(selectQuery, args...)
+	rows, err := r.db.Query(query, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -230,8 +204,10 @@ func (r *RewardRepository) List(page, limit int, search string) ([]models.Reward
 	for rows.Next() {
 		var reward models.Reward
 		err := rows.Scan(
-			&reward.ID, &reward.OwnerID, &reward.Name, &reward.Description, &reward.Image,
-			&reward.DrawDate, &reward.Completed, &reward.CreatedAt, &reward.UpdatedAt)
+			&reward.ID, &reward.OwnerID, &reward.Name, &reward.Description,
+			&reward.Image, &reward.DrawDate, &reward.Completed, &reward.WinnerNumber, &reward.DrawnAt,
+			&reward.CreatedAt, &reward.UpdatedAt,
+		)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -245,6 +221,7 @@ func (r *RewardRepository) List(page, limit int, search string) ([]models.Reward
 func (r *RewardRepository) ListByOwner(ownerID uuid.UUID, page, limit int) ([]models.Reward, int, error) {
 	offset := (page - 1) * limit
 
+	// Query para contar total
 	countQuery := `SELECT COUNT(*) FROM rewards WHERE owner_id = $1`
 	var total int
 	err := r.db.QueryRow(countQuery, ownerID).Scan(&total)
@@ -252,8 +229,16 @@ func (r *RewardRepository) ListByOwner(ownerID uuid.UUID, page, limit int) ([]mo
 		return nil, 0, err
 	}
 
-	selectQuery := `SELECT id, owner_id, name, description, image, draw_date, completed, created_at, updated_at FROM rewards WHERE owner_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
-	rows, err := r.db.Query(selectQuery, ownerID, limit, offset)
+	// Query para buscar prêmios
+	query := `
+		SELECT id, owner_id, name, description, image, draw_date, completed, winner_number, drawn_at, created_at, updated_at
+		FROM rewards
+		WHERE owner_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3
+	`
+
+	rows, err := r.db.Query(query, ownerID, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -263,8 +248,10 @@ func (r *RewardRepository) ListByOwner(ownerID uuid.UUID, page, limit int) ([]mo
 	for rows.Next() {
 		var reward models.Reward
 		err := rows.Scan(
-			&reward.ID, &reward.OwnerID, &reward.Name, &reward.Description, &reward.Image,
-			&reward.DrawDate, &reward.Completed, &reward.CreatedAt, &reward.UpdatedAt)
+			&reward.ID, &reward.OwnerID, &reward.Name, &reward.Description,
+			&reward.Image, &reward.DrawDate, &reward.Completed, &reward.WinnerNumber, &reward.DrawnAt,
+			&reward.CreatedAt, &reward.UpdatedAt,
+		)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -530,6 +517,18 @@ func (r *RewardRepository) BuyNumbers(rewardID, userID uuid.UUID, quantity int) 
 	}
 	defer tx.Rollback()
 
+	// Verificar se o prêmio está completado
+	var completed bool
+	checkQuery := `SELECT completed FROM rewards WHERE id = $1`
+	err = tx.QueryRow(checkQuery, rewardID).Scan(&completed)
+	if err != nil {
+		return nil, err
+	}
+
+	if completed {
+		return nil, errors.New("não é possível comprar números de um prêmio já completado")
+	}
+
 	// Buscar números disponíveis
 	minNumber, err := r.GetMinNumber(rewardID)
 	if err != nil {
@@ -544,7 +543,6 @@ func (r *RewardRepository) BuyNumbers(rewardID, userID uuid.UUID, quantity int) 
 
 	// Inserir cada número comprado
 	insertQuery := `INSERT INTO reward_buyers (reward_id, user_id, number, created_at) VALUES ($1, $2, $3, NOW())`
-
 	for _, number := range numbersToBuy {
 		_, err = tx.Exec(insertQuery, rewardID, userID, number)
 		if err != nil {
@@ -654,4 +652,148 @@ func (r *RewardRepository) GetUserPurchases(userID uuid.UUID, page, limit int) (
 	}
 
 	return purchases, total, nil
+}
+
+// DrawReward realiza o sorteio de um prêmio
+func (r *RewardRepository) DrawReward(rewardID uuid.UUID) (*models.DrawRewardResponse, error) {
+	// Iniciar transação
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	// Verificar se o prêmio já foi sorteado
+	var winnerNumber *int
+	var drawnAt *time.Time
+	checkQuery := `SELECT winner_number, drawn_at FROM rewards WHERE id = $1`
+	err = tx.QueryRow(checkQuery, rewardID).Scan(&winnerNumber, &drawnAt)
+	if err != nil {
+		return nil, err
+	}
+
+	if winnerNumber != nil {
+		return nil, errors.New("prêmio já foi sorteado")
+	}
+
+	// Buscar todos os números comprados para este prêmio
+	numbersQuery := `
+		SELECT number, user_id 
+		FROM reward_buyers 
+		WHERE reward_id = $1 
+		ORDER BY number
+	`
+	rows, err := tx.Query(numbersQuery, rewardID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var numbers []int
+	var userIDs []uuid.UUID
+	numberToUser := make(map[int]uuid.UUID)
+
+	for rows.Next() {
+		var number int
+		var userID uuid.UUID
+		if err := rows.Scan(&number, &userID); err != nil {
+			return nil, err
+		}
+		numbers = append(numbers, number)
+		userIDs = append(userIDs, userID)
+		numberToUser[number] = userID
+	}
+
+	if len(numbers) == 0 {
+		return nil, errors.New("nenhum número foi comprado para este prêmio")
+	}
+
+	// Realizar sorteio aleatório
+	rand.Seed(time.Now().UnixNano())
+	winnerIndex := rand.Intn(len(numbers))
+	winnerNumber = &numbers[winnerIndex]
+	winnerUserID := numberToUser[*winnerNumber]
+
+	// Atualizar o prêmio com o número vencedor e marcar como completado
+	now := time.Now()
+	updateQuery := `
+		UPDATE rewards 
+		SET winner_number = $1, drawn_at = $2, completed = true, updated_at = $3 
+		WHERE id = $4
+	`
+	_, err = tx.Exec(updateQuery, *winnerNumber, now, now, rewardID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Buscar informações do usuário vencedor
+	var winnerUser models.User
+	userQuery := `
+		SELECT id, name, email, role, active, created_at, updated_at 
+		FROM users 
+		WHERE id = $1
+	`
+	err = tx.QueryRow(userQuery, winnerUserID).Scan(
+		&winnerUser.ID, &winnerUser.Name, &winnerUser.Email,
+		&winnerUser.Role, &winnerUser.Active, &winnerUser.CreatedAt, &winnerUser.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Commit da transação
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	// Converter para response
+	winnerUserResponse := models.UserResponse{
+		ID:        winnerUser.ID,
+		Name:      winnerUser.Name,
+		Email:     winnerUser.Email,
+		Role:      winnerUser.Role,
+		Active:    winnerUser.Active,
+		CreatedAt: winnerUser.CreatedAt,
+		UpdatedAt: winnerUser.UpdatedAt,
+	}
+
+	return &models.DrawRewardResponse{
+		RewardID:     rewardID,
+		WinnerNumber: *winnerNumber,
+		WinnerUser:   &winnerUserResponse,
+		DrawnAt:      now,
+		Message:      fmt.Sprintf("Sorteio realizado! Número vencedor: %d. Prêmio marcado como completado.", *winnerNumber),
+	}, nil
+}
+
+// GetWinnerByNumber busca o usuário que comprou um número específico
+func (r *RewardRepository) GetWinnerByNumber(rewardID uuid.UUID, number int) (*models.User, error) {
+	query := `
+		SELECT u.id, u.name, u.email, u.role, u.active, u.created_at, u.updated_at
+		FROM users u
+		INNER JOIN reward_buyers rb ON u.id = rb.user_id
+		WHERE rb.reward_id = $1 AND rb.number = $2
+	`
+
+	var user models.User
+	err := r.db.QueryRow(query, rewardID, number).Scan(
+		&user.ID, &user.Name, &user.Email,
+		&user.Role, &user.Active, &user.CreatedAt, &user.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+// IsRewardDrawn verifica se um prêmio já foi sorteado
+func (r *RewardRepository) IsRewardDrawn(rewardID uuid.UUID) (bool, error) {
+	var winnerNumber *int
+	query := `SELECT winner_number FROM rewards WHERE id = $1`
+	err := r.db.QueryRow(query, rewardID).Scan(&winnerNumber)
+	if err != nil {
+		return false, err
+	}
+	return winnerNumber != nil, nil
 }

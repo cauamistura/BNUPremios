@@ -298,6 +298,13 @@ func (h *RewardHandler) AddBuyer(c *gin.Context) {
 
 	numbers, err := h.rewardService.BuyNumbers(rewardID, userID, req.Quantity)
 	if err != nil {
+		if err.Error() == "não é possível comprar números de um prêmio já completado" {
+			c.JSON(http.StatusConflict, gin.H{
+				"error":   "Prêmio já completado",
+				"message": err.Error(),
+			})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Erro interno do servidor",
 			"message": err.Error(),
@@ -543,4 +550,55 @@ func (h *RewardHandler) ListMyRewards(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, rewards)
+}
+
+// Draw realiza o sorteio de um prêmio
+// @Summary Realizar sorteio de um prêmio
+// @Description Realiza o sorteio aleatório de um prêmio baseado nos números comprados
+// @Tags rewards
+// @Accept json
+// @Produce json
+// @Param id path string true "ID do prêmio"
+// @Success 200 {object} models.DrawRewardResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 409 {object} map[string]interface{}
+// @Router /rewards/{id}/draw [post]
+func (h *RewardHandler) Draw(c *gin.Context) {
+	// Extrair ID do prêmio da URL
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "ID inválido",
+			"message": "Formato de ID inválido",
+		})
+		return
+	}
+
+	// Realizar o sorteio
+	result, err := h.rewardService.Draw(id)
+	if err != nil {
+		if err.Error() == "prêmio já foi sorteado" {
+			c.JSON(http.StatusConflict, gin.H{
+				"error":   "Sorteio já realizado",
+				"message": err.Error(),
+			})
+			return
+		}
+		if err.Error() == "nenhum número foi comprado para este prêmio" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "Nenhum número comprado",
+				"message": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Erro interno do servidor",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 }

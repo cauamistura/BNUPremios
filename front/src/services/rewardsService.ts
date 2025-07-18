@@ -1,4 +1,4 @@
-import type { Reward, RewardsResponse, RewardDetails } from '../Models/Reaward';
+import type { Reward, RewardsResponse, RewardDetails, DrawResponse } from '../Models/Reaward';
 import { authenticatedFetch } from './apiUtils';
 
 const API_BASE_URL = '/api/v1';
@@ -66,6 +66,23 @@ export const rewardsService = {
     async deleteReward(id: string): Promise<{ message: string }> {
         try {
             const response = await authenticatedFetch(`/rewards/${id}`, { method: 'DELETE' });
+            
+            if (!response.ok) {
+                // Tenta extrair a mensagem de erro da resposta
+                let errorMessage = `Erro na requisição: ${response.status}`;
+                
+                try {
+                    const errorData = await response.json();
+                    if (errorData.message) {
+                        errorMessage = errorData.message;
+                    }
+                } catch (parseError) {
+                    // Se não conseguir fazer parse do JSON, usa a mensagem padrão
+                    console.log('Não foi possível fazer parse da resposta de erro');
+                }
+                
+                throw new Error(errorMessage);
+            }
             
             // Verifica se a resposta tem conteúdo antes de tentar fazer parse
             const text = await response.text();
@@ -139,6 +156,24 @@ export const rewardsService = {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
+            
+            if (!response.ok) {
+                // Tenta extrair a mensagem de erro da resposta
+                let errorMessage = `Erro na requisição: ${response.status}`;
+                
+                try {
+                    const errorData = await response.json();
+                    if (errorData.message) {
+                        errorMessage = errorData.message;
+                    }
+                } catch (parseError) {
+                    // Se não conseguir fazer parse do JSON, usa a mensagem padrão
+                    console.log('Não foi possível fazer parse da resposta de erro');
+                }
+                
+                throw new Error(errorMessage);
+            }
+            
             return response.json();
         } catch (error) {
             console.error('Erro ao criar prêmio:', error);
@@ -160,9 +195,59 @@ export const rewardsService = {
                 method: 'PUT',
                 body: JSON.stringify(data)
             });
+            
+            if (!response.ok) {
+                // Tenta extrair a mensagem de erro da resposta
+                let errorMessage = `Erro na requisição: ${response.status}`;
+                
+                try {
+                    const errorData = await response.json();
+                    if (errorData.message) {
+                        errorMessage = errorData.message;
+                    }
+                } catch (parseError) {
+                    // Se não conseguir fazer parse do JSON, usa a mensagem padrão
+                    console.log('Não foi possível fazer parse da resposta de erro');
+                }
+                
+                throw new Error(errorMessage);
+            }
+            
             return response.json();
         } catch (error) {
             console.error('Erro ao atualizar prêmio:', error);
+            throw error;
+        }
+    },
+    async performDraw(rewardId: string): Promise<DrawResponse> {
+        try {
+            const response = await authenticatedFetch(`/rewards/${rewardId}/draw`, {
+                method: 'POST'
+            });
+            
+            console.log('response', response);
+
+            if (!response.ok) {
+                // Tenta extrair a mensagem de erro da resposta
+                let errorMessage = `Erro na requisição: ${response.status}`;
+                
+                try {
+                    const errorData = await response.json();
+                    if (errorData.message) {
+                        errorMessage = errorData.message;
+                    }
+                } catch (parseError) {
+                    // Se não conseguir fazer parse do JSON, usa a mensagem padrão
+                    console.log('Não foi possível fazer parse da resposta de erro');
+                }
+                
+                throw new Error(errorMessage);
+            }
+            
+            const data: DrawResponse = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Erro ao realizar sorteio:', error);
             throw error;
         }
     }

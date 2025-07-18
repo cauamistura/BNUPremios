@@ -2,23 +2,24 @@ import { useState, useEffect } from 'react';
 import RewardCardList from "../../Components/RewardCardList";
 import { rewardsService } from "../../services/rewardsService";
 import type { Reward } from "../../Models/Reaward";
+import { useToastContext } from "../../contexts/ToastContext";
 import "./index.css";
 
 export default function Home() {
+    const { showError } = useToastContext();
     const [rewards, setRewards] = useState<Reward[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchRewards = async () => {
             try {
                 setLoading(true);
-                setError(null);
                 const response = await rewardsService.getRewards();
                 // Garantir que rewards seja sempre um array válido
                 setRewards(response.rewards || []);
             } catch (err) {
-                setError('Erro ao carregar os prêmios. Tente novamente.');
+                const errorMessage = 'Erro ao carregar os prêmios. Tente novamente.';
+                showError(errorMessage);
                 console.error('Erro ao buscar prêmios:', err);
                 // Em caso de erro, garantir que rewards seja um array vazio
                 setRewards([]);
@@ -38,17 +39,6 @@ export default function Home() {
             </div>
         );
     }
-
-    if (error) {
-        return (
-            <div className="home-error-container">
-                <p className="home-error-message">{error}</p>
-                <button className="home-error-reload-btn" onClick={() => window.location.reload()}>
-                    Tentar novamente
-                </button>
-            </div>
-        );
-    }    
 
     // Verificação adicional de segurança
     const rewardsArray = Array.isArray(rewards) ? rewards : [];

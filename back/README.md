@@ -1,110 +1,24 @@
 # BNUPremios API
 
-API REST para gerenciamento de usuários desenvolvida em Go com boas práticas de desenvolvimento.
+API RESTful desenvolvida em Go para gerenciamento de prêmios e usuários do sistema BNUPremios.
 
-## 🚀 Tecnologias
+## 🏗️ Arquitetura
 
-- **Go 1.21+**
-- **Gin** - Framework web
-- **PostgreSQL** - Banco de dados
-- **Docker** - Containerização
-- **Swagger** - Documentação da API
-- **Golang Migrate** - Migrações do banco de dados
+A API segue uma arquitetura em camadas (Layered Architecture) com separação clara de responsabilidades:
 
-## 📋 Pré-requisitos
-
-- Go 1.21 ou superior
-- Docker e Docker Compose
-- Git
-
-## 🛠️ Instalação e Execução
-
-### 1. Clone o repositório
-
-```bash
-git clone https://github.com/cauamistura/BNUPremios.git
-cd BNUPremios/back
+```
+┌─────────────────┐
+│   Controllers   │  ← Handlers (Gin)
+├─────────────────┤
+│    Services     │  ← Lógica de Negócio
+├─────────────────┤
+│  Repositories   │  ← Acesso a Dados
+├─────────────────┤
+│   Database      │  ← PostgreSQL
+└─────────────────┘
 ```
 
-### 2. Configure as variáveis de ambiente
-
-Copie o arquivo de exemplo e configure as variáveis:
-
-```bash
-cp env.example .env
-```
-
-Edite o arquivo `.env` com suas configurações:
-
-```env
-# Configurações do Banco de Dados
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_NAME=bnupremios
-DB_SSLMODE=disable
-
-# Configurações da API
-API_PORT=8080
-API_MODE=debug
-
-# JWT Secret
-JWT_SECRET=your-secret-key-here
-
-# Configurações de Log
-LOG_LEVEL=debug
-```
-
-### 3. Execute com Docker Compose
-
-```bash
-# Construir e executar os containers
-docker-compose up --build
-
-# Para executar em background
-docker-compose up -d --build
-```
-
-### 4. Execute localmente (opcional)
-
-Se preferir executar localmente:
-
-```bash
-# Instalar dependências
-go mod download
-
-# Executar migrações
-go run cmd/main.go
-
-# Ou executar a aplicação
-go run cmd/main.go
-```
-
-## 📚 Documentação da API
-
-A documentação Swagger está disponível em:
-
-- **URL**: http://localhost:8080/swagger/index.html
-- **Base URL**: http://localhost:8080/api/v1
-
-## 🔧 Endpoints Disponíveis
-
-### Autenticação
-- `POST /api/v1/auth/register` - Registrar novo usuário
-- `POST /api/v1/auth/login` - Login de usuário
-
-### Usuários
-- `GET /api/v1/users` - Listar usuários (com paginação)
-- `POST /api/v1/users` - Criar usuário
-- `GET /api/v1/users/{id}` - Buscar usuário por ID
-- `PUT /api/v1/users/{id}` - Atualizar usuário
-- `DELETE /api/v1/users/{id}` - Deletar usuário
-
-### Health Check
-- `GET /health` - Verificar status da API
-
-## 📊 Estrutura do Projeto
+### Estrutura do Projeto
 
 ```
 back/
@@ -116,116 +30,253 @@ back/
 │   ├── database/
 │   │   └── connection.go      # Conexão com banco de dados
 │   ├── handlers/
-│   │   └── user_handler.go    # Handlers HTTP
+│   │   ├── user_handler.go    # Controllers de usuários
+│   │   └── reward_handler.go  # Controllers de prêmios
 │   ├── middleware/
+│   │   ├── auth.go           # Middleware de autenticação JWT
 │   │   ├── cors.go           # Middleware CORS
-│   │   └── logger.go         # Middleware de log
+│   │   └── logger.go         # Middleware de logging
 │   ├── models/
-│   │   └── user.go           # Modelos de dados
+│   │   ├── user.go           # Modelos de usuário
+│   │   └── reward.go         # Modelos de prêmio
 │   ├── repository/
-│   │   └── user_repository.go # Camada de acesso a dados
+│   │   ├── user_repository.go # Repositório de usuários
+│   │   └── reward_repository.go # Repositório de prêmios
+│   ├── routes/
+│   │   └── routes.go         # Definição de rotas
 │   └── services/
-│       └── user_service.go    # Lógica de negócio
-├── migrations/
-│   ├── 000001_create_users_table.up.sql
-│   └── 000001_create_users_table.down.sql
-├── docker-compose.yml
-├── Dockerfile
-├── go.mod
-├── env.example
-└── README.md
+│       ├── user_service.go   # Serviços de usuário
+│       └── reward_service.go # Serviços de prêmio
+├── migrations/               # Migrações do banco de dados
+├── Dockerfile               # Configuração Docker
+├── docker-compose.yml       # Orquestração de containers
+├── go.mod                   # Dependências Go
+└── Makefile                 # Comandos de automação
 ```
 
-## 🗄️ Banco de Dados
+## 🛠️ Tecnologias Utilizadas
 
-### Tabela Users
+- **Go 1.24.5** - Linguagem principal
+- **Gin** - Framework web para roteamento e middleware
+- **PostgreSQL** - Banco de dados relacional
+- **JWT** - Autenticação e autorização
+- **Swagger** - Documentação da API
+- **Docker** - Containerização
+- **Golang Migrate** - Migrações de banco de dados
+- **UUID** - Identificadores únicos
 
-| Campo      | Tipo      | Descrição                    |
-|------------|-----------|------------------------------|
-| id         | UUID      | Identificador único           |
-| name       | VARCHAR   | Nome do usuário              |
-| email      | VARCHAR   | Email (único)                |
-| password   | VARCHAR   | Senha criptografada          |
-| role       | VARCHAR   | Papel do usuário             |
-| active     | BOOLEAN   | Status ativo/inativo         |
-| created_at | TIMESTAMP | Data de criação              |
-| updated_at | TIMESTAMP | Data de atualização          |
+## 🚀 Como Executar
 
-## 🔐 Segurança
+### Pré-requisitos
 
-- Senhas são criptografadas usando bcrypt
-- Validação de dados de entrada
-- Headers CORS configurados
-- Logs de requisições
+- Go 1.24.5 ou superior
+- PostgreSQL 15 ou superior
+- Docker e Docker Compose (opcional)
 
-## 🧪 Testes
+### Variáveis de Ambiente
 
-Para executar os testes (quando implementados):
+Crie um arquivo `.env` na raiz do projeto:
+
+```env
+# Banco de Dados
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=bnupremios
+DB_SSLMODE=disable
+
+# API
+API_PORT=8080
+API_MODE=debug
+
+# JWT
+JWT_SECRET=your-secret-key-here
+```
+
+### Execução Local
+
+1. **Instalar dependências:**
+   ```bash
+   go mod download
+   go mod tidy
+   ```
+
+2. **Executar migrações:**
+   ```bash
+   make migrate-up
+   ```
+
+3. **Executar a aplicação:**
+   ```bash
+   make run
+   ```
+
+### Execução com Docker
 
 ```bash
-go test ./...
+# Construir e executar com Docker Compose
+make docker-run
+
+# Ou manualmente:
+docker-compose up --build
 ```
 
-## 📝 Exemplos de Uso
+## 📚 Endpoints da API
 
-### Criar usuário
+### Autenticação
+- `POST /api/v1/auth/login` - Login de usuário
+- `POST /api/v1/auth/register` - Registro de usuário
+
+### Usuários (Protegido)
+- `GET /api/v1/users/` - Listar usuários
+- `GET /api/v1/users/:id` - Obter usuário por ID
+- `PUT /api/v1/users/:id` - Atualizar usuário
+- `DELETE /api/v1/users/:id` - Deletar usuário
+
+### Prêmios
+#### Públicos
+- `GET /api/v1/rewards/` - Listar prêmios
+- `GET /api/v1/rewards/:id` - Obter prêmio por ID
+- `GET /api/v1/rewards/:id/details` - Obter detalhes do prêmio
+- `GET /api/v1/rewards/:id/buyers` - Listar compradores
+
+#### Protegidos
+- `POST /api/v1/rewards/` - Criar prêmio
+- `GET /api/v1/rewards/mine` - Listar meus prêmios
+- `PUT /api/v1/rewards/:id` - Atualizar prêmio
+- `DELETE /api/v1/rewards/:id` - Deletar prêmio
+- `POST /api/v1/rewards/:id/buyers/:user_id` - Adicionar comprador
+- `DELETE /api/v1/rewards/:id/buyers/:user_id` - Remover comprador
+- `GET /api/v1/rewards/:id/buyers/:user_id/numbers` - Obter números do usuário
+- `POST /api/v1/rewards/:id/draw` - Realizar sorteio
+
+### Compras (Protegido)
+- `GET /api/v1/purchases/user/:user_id` - Listar compras do usuário
+
+### Utilitários
+- `GET /health` - Health check
+- `GET /swagger/*` - Documentação Swagger
+
+## 🔐 Autenticação
+
+A API utiliza JWT (JSON Web Tokens) para autenticação. Para acessar endpoints protegidos:
+
+1. Faça login via `POST /api/v1/auth/login`
+2. Use o token retornado no header: `Authorization: Bearer <token>`
+
+## 📊 Banco de Dados
+
+### Tabelas Principais
+
+- **users** - Usuários do sistema
+- **rewards** - Prêmios disponíveis
+- **reward_buyers** - Relacionamento entre prêmios e compradores
+
+### Migrações
+
+As migrações são gerenciadas com `golang-migrate`:
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/users \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "João Silva",
-    "email": "joao@example.com",
-    "password": "123456"
-  }'
+# Executar migrações
+make migrate-up
+
+# Reverter migrações
+make migrate-down
 ```
 
-### Login
+## 🐳 Docker
+
+### Construir Imagem
+```bash
+make docker-build
+```
+
+### Executar com Docker Compose
+```bash
+make docker-run
+```
+
+### Parar Containers
+```bash
+make docker-stop
+```
+
+## 📖 Documentação
+
+A documentação da API está disponível via Swagger em:
+```
+http://localhost:8080/swagger/index.html
+```
+
+Para gerar a documentação:
+```bash
+make swagger
+```
+
+## 🧪 Desenvolvimento
+
+### Comandos Úteis
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "joao@example.com",
-    "password": "123456"
-  }'
+# Ajuda
+make help
+
+# Desenvolvimento completo
+make dev
+
+# Testes
+make test
+
+# Limpeza
+make clean
+
+# Setup inicial
+make setup
 ```
 
-### Listar usuários
+### Estrutura de Código
 
-```bash
-curl -X GET "http://localhost:8080/api/v1/users?page=1&limit=10"
-```
+- **Handlers**: Responsáveis por receber requisições HTTP e retornar respostas
+- **Services**: Contêm a lógica de negócio da aplicação
+- **Repositories**: Gerenciam o acesso aos dados no banco
+- **Models**: Definem as estruturas de dados
+- **Middleware**: Interceptam requisições para autenticação, CORS, logging, etc.
 
-## 🐛 Troubleshooting
+## 🔧 Configuração
 
-### Problemas comuns
+A aplicação utiliza configuração baseada em variáveis de ambiente com fallbacks para valores padrão. As configurações são carregadas no pacote `config`.
 
-1. **Erro de conexão com banco de dados**
-   - Verifique se o PostgreSQL está rodando
-   - Confirme as configurações no arquivo `.env`
+### Modos de Execução
 
-2. **Erro de migração**
-   - Certifique-se de que o banco de dados está acessível
-   - Verifique se as credenciais estão corretas
+- **debug**: Modo de desenvolvimento com logs detalhados
+- **release**: Modo de produção com logs mínimos
 
-3. **Porta já em uso**
-   - Altere a porta no arquivo `.env` ou `docker-compose.yml`
+## 📝 Logs
 
-## 🤝 Contribuição
+A aplicação utiliza middleware de logging que registra:
+- Método HTTP
+- URL da requisição
+- Status da resposta
+- Tempo de processamento
+- Tamanho da resposta
 
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
+## 🔒 Segurança
+
+- Autenticação JWT
+- Senhas criptografadas com bcrypt
+- Middleware CORS configurado
+- Validação de entrada com tags de binding
+- UUIDs para identificadores
+
+## 🚀 Deploy
+
+A aplicação está preparada para deploy em containers Docker com:
+- Multi-stage build para otimização
+- Imagem Alpine para tamanho reduzido
+- Configuração via variáveis de ambiente
+- Health check endpoint
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
-## 👨‍💻 Autor
-
-**Cauã Mistura**
-- GitHub: [@cauamistura](https://github.com/cauamistura)
-- Projeto: [BNUPremios](https://github.com/cauamistura/BNUPremios) 
+Este projeto está sob a licença Apache 2.0.

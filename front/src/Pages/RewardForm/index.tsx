@@ -5,17 +5,18 @@ import type { RewardFormData } from "../../Components/RewardForm";
 import { rewardsService } from "../../services/rewardsService";
 import type { Reward } from "../../Models/Reaward";
 import { useAuth } from "../../hooks/useAuth";
+import { useToastContext } from "../../contexts/ToastContext";
 import "./index.css";
 
 export default function RewardFormPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { showError, showSuccess } = useToastContext();
     
     const [reward, setReward] = useState<Reward | undefined>();
     const [loading, setLoading] = useState(true);
     const [formLoading, setFormLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchReward = async () => {
@@ -26,11 +27,11 @@ export default function RewardFormPage() {
 
             try {
                 setLoading(true);
-                setError(null);
                 const data = await rewardsService.getRewardById(id);
                 setReward(data);
             } catch (err) {
-                setError('Erro ao carregar o prêmio. Tente novamente.');
+                const errorMessage = 'Erro ao carregar o prêmio. Tente novamente.';
+                showError(errorMessage);
                 console.error('Erro ao buscar prêmio:', err);
             } finally {
                 setLoading(false);
@@ -46,10 +47,18 @@ export default function RewardFormPage() {
         try {
             setFormLoading(true);
             await rewardsService.createReward(formData);
+            showSuccess('Prêmio criado com sucesso!');
             navigate('/MeusSorteios');
         } catch (err) {
             console.error('Erro ao criar prêmio:', err);
-            setError('Erro ao criar prêmio. Tente novamente.');
+            
+            // Extrai a mensagem de erro
+            let errorMessage = 'Erro ao criar prêmio. Tente novamente.';
+            if (err instanceof Error) {
+                errorMessage = err.message;
+            }
+            
+            showError(errorMessage);
         } finally {
             setFormLoading(false);
         }
@@ -61,10 +70,18 @@ export default function RewardFormPage() {
         try {
             setFormLoading(true);
             await rewardsService.updateReward(reward.id, formData);
+            showSuccess('Prêmio atualizado com sucesso!');
             navigate('/MeusSorteios');
         } catch (err) {
             console.error('Erro ao atualizar prêmio:', err);
-            setError('Erro ao atualizar prêmio. Tente novamente.');
+            
+            // Extrai a mensagem de erro
+            let errorMessage = 'Erro ao atualizar prêmio. Tente novamente.';
+            if (err instanceof Error) {
+                errorMessage = err.message;
+            }
+            
+            showError(errorMessage);
         } finally {
             setFormLoading(false);
         }
@@ -79,17 +96,6 @@ export default function RewardFormPage() {
             <div className="reward-form-page-loading">
                 <div className="loading-spinner"></div>
                 <p>Carregando...</p>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="reward-form-page-error">
-                <p className="error-message">{error}</p>
-                <button className="error-reload-btn" onClick={() => window.location.reload()}>
-                    Tentar novamente
-                </button>
             </div>
         );
     }
