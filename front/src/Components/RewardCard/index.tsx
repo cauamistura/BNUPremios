@@ -5,9 +5,12 @@ import './index.css';
 
 interface RewardCardProps {
     reward: Reward;
+    routeItem: String;
+    onEdit?: (reward: Reward) => void;
+    onDelete?: (reward: Reward) => void;
 }
 
-const RewardCard: React.FC<RewardCardProps> = ({ reward }) => {
+const RewardCard: React.FC<RewardCardProps> = ({ reward, routeItem, onEdit, onDelete}) => {
     const navigate = useNavigate();
     
     const formatDate = (date: string) => {
@@ -21,11 +24,43 @@ const RewardCard: React.FC<RewardCardProps> = ({ reward }) => {
     };
 
     const handleCardClick = () => {
-        navigate(`/premio/${reward.id}`);
+        navigate(`/${routeItem}/${reward.id}`);
+    };
+
+    const handleEditClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (onEdit) {
+            onEdit(reward);
+        }
+    };
+
+    const handleDeleteClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (onDelete) {
+            onDelete(reward);
+        }
     };
 
     return (
         <div className="reward-card" onClick={handleCardClick}>
+            {onEdit && (
+                <button 
+                    className="edit-button"
+                    onClick={handleEditClick}
+                    title="Editar prêmio"
+                >
+                    ✏️
+                </button>
+            )}
+            {onDelete && (
+                <button 
+                    className="delete-button"
+                    onClick={handleDeleteClick}
+                    title="Excluir prêmio"
+                >
+                    🗑️
+                </button>
+            )}
             <div className="reward-image">
                 <img src={reward.image} alt={reward.name} />
             </div>

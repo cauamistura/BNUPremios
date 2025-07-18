@@ -74,6 +74,7 @@ func SetupRoutes(router *gin.Engine, userHandler *handlers.UserHandler, rewardHa
 			protectedRewards.Use(middleware.AuthMiddleware(jwtSecret))
 			{
 				protectedRewards.POST("/", rewardHandler.Create)
+				protectedRewards.GET("/mine", rewardHandler.ListMyRewards)
 				protectedRewards.PUT("/:id", rewardHandler.Update)
 				protectedRewards.DELETE("/:id", rewardHandler.Delete)
 

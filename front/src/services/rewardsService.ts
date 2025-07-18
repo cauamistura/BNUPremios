@@ -11,7 +11,19 @@ export const rewardsService = {
                 throw new Error(`Erro na requisição: ${response.status}`);
             }
             const data: RewardsResponse = await response.json();
-            return data;
+            
+            // Garantir que rewards seja sempre um array válido
+            return {
+                rewards: Array.isArray(data.rewards) ? data.rewards : [],
+                pagination: data.pagination || {
+                    page: 1,
+                    limit: 10,
+                    total: 0,
+                    pages: 1,
+                    has_next: false,
+                    has_prev: false
+                }
+            };
         } catch (error) {
             console.error('Erro ao buscar recompensas:', error);
             throw error;
@@ -51,23 +63,23 @@ export const rewardsService = {
         return response.json();
     },
     // Métodos protegidos
-    async createReward(data: any) {
-        const res = await authenticatedFetch('/rewards', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
-        return res.json();
-    },
-    async updateReward(id: string, data: any) {
-        const res = await authenticatedFetch(`/rewards/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(data)
-        });
-        return res.json();
-    },
-    async deleteReward(id: string) {
-        const res = await authenticatedFetch(`/rewards/${id}`, { method: 'DELETE' });
-        return res.json();
+    async deleteReward(id: string): Promise<{ message: string }> {
+        try {
+            const response = await authenticatedFetch(`/rewards/${id}`, { method: 'DELETE' });
+            
+            // Verifica se a resposta tem conteúdo antes de tentar fazer parse
+            const text = await response.text();
+            
+            if (text) {
+                return JSON.parse(text);
+            } else {
+                // Se a resposta está vazia, retorna uma mensagem de sucesso
+                return { message: 'Prêmio excluído com sucesso' };
+            }
+        } catch (error) {
+            console.error('Erro ao deletar prêmio:', error);
+            throw error;
+        }
     },
     async addBuyer(rewardId: string, userId: string, quantity: number) {
         const res = await authenticatedFetch(`/rewards/${rewardId}/buyers/${userId}`, {
@@ -87,5 +99,71 @@ export const rewardsService = {
             method: 'GET'
         });
         return res.json();
+    },
+    async getMyRewards(): Promise<RewardsResponse> {
+        try {
+            const response = await authenticatedFetch('/rewards/mine');
+            if (!response.ok) {
+                throw new Error(`Erro na requisição: ${response.status}`);
+            }
+            const data: RewardsResponse = await response.json();
+            
+            // Garantir que rewards seja sempre um array válido
+            return {
+                rewards: Array.isArray(data.rewards) ? data.rewards : [],
+                pagination: data.pagination || {
+                    page: 1,
+                    limit: 10,
+                    total: 0,
+                    pages: 1,
+                    has_next: false,
+                    has_prev: false
+                }
+            };
+        } catch (error) {
+            console.error('Erro ao buscar meus prêmios:', error);
+            throw error;
+        }
+    },
+    async createReward(data: {
+        name: string;
+        description: string;
+        image: string;
+        images: string[];
+        draw_date: string;
+        min_quota: number;
+        price: number;        
+    }): Promise<Reward> {
+        try {
+            const response = await authenticatedFetch('/rewards', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            return response.json();
+        } catch (error) {
+            console.error('Erro ao criar prêmio:', error);
+            throw error;
+        }
+    },
+    async updateReward(id: string, data: {
+        name: string;
+        description: string;
+        image: string;
+        images: string[];
+        draw_date: string;
+        min_quota: number;
+        price: number;
+    }): Promise<Reward> {
+        console.log('updateReward - dados recebidos:', data);
+        try {
+            const response = await authenticatedFetch(`/rewards/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(data)
+            });
+            return response.json();
+        } catch (error) {
+            console.error('Erro ao atualizar prêmio:', error);
+            throw error;
+        }
     }
 }; 

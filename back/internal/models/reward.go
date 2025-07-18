@@ -9,6 +9,7 @@ import (
 // Reward representa um prêmio no sistema
 type Reward struct {
 	ID          uuid.UUID `json:"id" db:"id"`
+	OwnerID     uuid.UUID `json:"owner_id" db:"owner_id"`
 	Name        string    `json:"name" db:"name" binding:"required"`
 	Description string    `json:"description" db:"description"`
 	Image       string    `json:"image" db:"image"`
@@ -53,6 +54,7 @@ type UpdateRewardRequest struct {
 // RewardResponse representa a resposta de um prêmio
 type RewardResponse struct {
 	ID          uuid.UUID `json:"id"`
+	OwnerID     uuid.UUID `json:"owner_id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	Image       string    `json:"image"`
@@ -69,6 +71,14 @@ type RewardDetailsResponse struct {
 	Price    float64           `json:"price"`
 	MinQuota int               `json:"min_quota"`
 	Buyers   []BuyerWithNumber `json:"buyers"`
+}
+
+// RewardDetailsWithoutBuyersResponse representa a resposta detalhada de um prêmio sem compradores
+type RewardDetailsWithoutBuyersResponse struct {
+	RewardResponse
+	Images   []string `json:"images"`
+	Price    float64  `json:"price"`
+	MinQuota int      `json:"min_quota"`
 }
 
 // RewardListResponse representa a resposta da listagem de prêmios

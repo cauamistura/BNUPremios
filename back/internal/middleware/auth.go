@@ -11,9 +11,9 @@ import (
 
 // Claims representa as claims do JWT
 type Claims struct {
-	UserID uuid.UUID `json:"user_id"`
-	Email  string    `json:"email"`
-	Role   string    `json:"role"`
+	UserID string `json:"user_id"`
+	Email  string `json:"email"`
+	Role   string `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -77,7 +77,16 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		}
 
 		// Adicionar informações do usuário ao contexto
-		c.Set("user_id", claims.UserID)
+		parsedUserID, err := uuid.Parse(claims.UserID)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error":   "Token inválido",
+				"message": "user_id inválido no token",
+			})
+			c.Abort()
+			return
+		}
+		c.Set("user_id", parsedUserID)
 		c.Set("user_email", claims.Email)
 		c.Set("user_role", claims.Role)
 

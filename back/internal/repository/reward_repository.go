@@ -30,12 +30,13 @@ func (r *RewardRepository) Create(reward *models.Reward, price float64, minQuota
 
 	// Inserir prêmio básico
 	rewardQuery := `
-		INSERT INTO rewards (id, name, description, image, draw_date, completed, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO rewards (id, owner_id, name, description, image, draw_date, completed, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 
 	_, err = tx.Exec(rewardQuery,
 		reward.ID,
+		reward.OwnerID,
 		reward.Name,
 		reward.Description,
 		reward.Image,
@@ -87,13 +88,13 @@ func (r *RewardRepository) Create(reward *models.Reward, price float64, minQuota
 // GetByID busca um prêmio por ID
 func (r *RewardRepository) GetByID(id uuid.UUID) (*models.Reward, error) {
 	query := `
-		SELECT id, name, description, image, draw_date, completed, created_at, updated_at
+		SELECT id, owner_id, name, description, image, draw_date, completed, created_at, updated_at
 		FROM rewards WHERE id = $1
 	`
 
 	reward := &models.Reward{}
 	err := r.db.QueryRow(query, id).Scan(
-		&reward.ID, &reward.Name, &reward.Description, &reward.Image,
+		&reward.ID, &reward.OwnerID, &reward.Name, &reward.Description, &reward.Image,
 		&reward.DrawDate, &reward.Completed, &reward.CreatedAt, &reward.UpdatedAt)
 
 	if err != nil {
@@ -214,7 +215,7 @@ func (r *RewardRepository) List(page, limit int, search string) ([]models.Reward
 
 	// Query para buscar dados
 	selectQuery := `
-		SELECT id, name, description, image, draw_date, completed, created_at, updated_at
+		SELECT id, owner_id, name, description, image, draw_date, completed, created_at, updated_at
 		` + baseQuery + ` ORDER BY created_at DESC LIMIT $` + fmt.Sprintf("%d", argCount) + ` OFFSET $` + fmt.Sprintf("%d", argCount+1)
 
 	args = append(args, limit, offset)
@@ -229,7 +230,40 @@ func (r *RewardRepository) List(page, limit int, search string) ([]models.Reward
 	for rows.Next() {
 		var reward models.Reward
 		err := rows.Scan(
-			&reward.ID, &reward.Name, &reward.Description, &reward.Image,
+			&reward.ID, &reward.OwnerID, &reward.Name, &reward.Description, &reward.Image,
+			&reward.DrawDate, &reward.Completed, &reward.CreatedAt, &reward.UpdatedAt)
+		if err != nil {
+			return nil, 0, err
+		}
+		rewards = append(rewards, reward)
+	}
+
+	return rewards, total, nil
+}
+
+// ListByOwner busca todos os prêmios de um dono específico com paginação
+func (r *RewardRepository) ListByOwner(ownerID uuid.UUID, page, limit int) ([]models.Reward, int, error) {
+	offset := (page - 1) * limit
+
+	countQuery := `SELECT COUNT(*) FROM rewards WHERE owner_id = $1`
+	var total int
+	err := r.db.QueryRow(countQuery, ownerID).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	selectQuery := `SELECT id, owner_id, name, description, image, draw_date, completed, created_at, updated_at FROM rewards WHERE owner_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	rows, err := r.db.Query(selectQuery, ownerID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var rewards []models.Reward
+	for rows.Next() {
+		var reward models.Reward
+		err := rows.Scan(
+			&reward.ID, &reward.OwnerID, &reward.Name, &reward.Description, &reward.Image,
 			&reward.DrawDate, &reward.Completed, &reward.CreatedAt, &reward.UpdatedAt)
 		if err != nil {
 			return nil, 0, err
@@ -273,11 +307,120 @@ func (r *RewardRepository) Update(id uuid.UUID, updates map[string]interface{}) 
 	return err
 }
 
+// UpdateDetails atualiza os detalhes de um prêmio (price, min_quota, images)
+func (r *RewardRepository) UpdateDetails(rewardID uuid.UUID, price *float64, minQuota *int, images []string) error {
+	// Iniciar transação
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Atualizar price e min_quota se fornecidos
+	if price != nil || minQuota != nil {
+		updateFields := []string{}
+		args := []interface{}{}
+		argCount := 1
+
+		if price != nil {
+			updateFields = append(updateFields, fmt.Sprintf("price = $%d", argCount))
+			args = append(args, *price)
+			argCount++
+		}
+		if minQuota != nil {
+			updateFields = append(updateFields, fmt.Sprintf("min_quota = $%d", argCount))
+			args = append(args, *minQuota)
+			argCount++
+		}
+
+		updateFields = append(updateFields, fmt.Sprintf("updated_at = $%d", argCount))
+		args = append(args, time.Now())
+		argCount++
+
+		args = append(args, rewardID)
+
+		detailsQuery := fmt.Sprintf(`
+			UPDATE reward_details 
+			SET %s 
+			WHERE reward_id = $%d
+		`, strings.Join(updateFields, ", "), argCount)
+
+		_, err = tx.Exec(detailsQuery, args...)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Atualizar imagens se fornecidas
+	if len(images) > 0 {
+		// Remover imagens existentes
+		deleteQuery := `DELETE FROM reward_images WHERE reward_id = $1`
+		_, err = tx.Exec(deleteQuery, rewardID)
+		if err != nil {
+			return err
+		}
+
+		// Inserir novas imagens
+		imagesQuery := `
+			INSERT INTO reward_images (reward_id, image_url, created_at)
+			VALUES ($1, $2, $3)
+		`
+
+		for _, image := range images {
+			if image != "" { // Só inserir se não for vazio
+				_, err = tx.Exec(imagesQuery, rewardID, image, time.Now())
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	// Commit da transação
+	return tx.Commit()
+}
+
 // Delete remove um prêmio
 func (r *RewardRepository) Delete(id uuid.UUID) error {
-	query := `DELETE FROM rewards WHERE id = $1`
-	_, err := r.db.Exec(query, id)
-	return err
+	// Iniciar transação
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Deletar registros filhos na ordem correta (evitar problemas de chave estrangeira)
+
+	// 1. Deletar compradores (reward_buyers)
+	deleteBuyersQuery := `DELETE FROM reward_buyers WHERE reward_id = $1`
+	_, err = tx.Exec(deleteBuyersQuery, id)
+	if err != nil {
+		return err
+	}
+
+	// 2. Deletar imagens (reward_images)
+	deleteImagesQuery := `DELETE FROM reward_images WHERE reward_id = $1`
+	_, err = tx.Exec(deleteImagesQuery, id)
+	if err != nil {
+		return err
+	}
+
+	// 3. Deletar detalhes (reward_details)
+	deleteDetailsQuery := `DELETE FROM reward_details WHERE reward_id = $1`
+	_, err = tx.Exec(deleteDetailsQuery, id)
+	if err != nil {
+		return err
+	}
+
+	// 4. Deletar o prêmio principal (rewards)
+	deleteRewardQuery := `DELETE FROM rewards WHERE id = $1`
+	_, err = tx.Exec(deleteRewardQuery, id)
+	if err != nil {
+		return err
+	}
+
+	// Commit da transação
+	return tx.Commit()
 }
 
 // AddBuyer adiciona um comprador a um prêmio

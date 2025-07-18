@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/cauamistura/BNUPremios/internal/middleware"
 	"github.com/cauamistura/BNUPremios/internal/models"
 	"github.com/cauamistura/BNUPremios/internal/services"
 	"github.com/gin-gonic/gin"
@@ -40,7 +42,17 @@ func (h *RewardHandler) Create(c *gin.Context) {
 		return
 	}
 
-	reward, err := h.rewardService.Create(&req)
+	// Pega o usuário autenticado do contexto
+	userID, err := middleware.GetUserFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Usuário não autenticado",
+			"message": "Token inválido ou ausente",
+		})
+		return
+	}
+
+	reward, err := h.rewardService.Create(&req, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Erro interno do servidor",
@@ -53,12 +65,12 @@ func (h *RewardHandler) Create(c *gin.Context) {
 }
 
 // GetByID @Summary Buscar prêmio por ID
-// @Description Busca um prêmio específico pelo ID (rota pública)
+// @Description Busca um prêmio específico pelo ID com detalhes completos (rota pública)
 // @Tags rewards
 // @Accept json
 // @Produce json
 // @Param id path string true "ID do prêmio"
-// @Success 200 {object} models.RewardResponse
+// @Success 200 {object} models.RewardDetailsWithoutBuyersResponse
 // @Failure 404 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /rewards/{id} [get]
@@ -73,7 +85,7 @@ func (h *RewardHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	reward, err := h.rewardService.GetByID(id)
+	rewardDetails, err := h.rewardService.GetDetailsByIDWithoutBuyers(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error":   "Prêmio não encontrado",
@@ -82,7 +94,7 @@ func (h *RewardHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, reward)
+	c.JSON(http.StatusOK, rewardDetails)
 }
 
 // GetDetailsByID @Summary Buscar detalhes do prêmio por ID
@@ -481,4 +493,54 @@ func (h *RewardHandler) GetUserPurchases(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, purchases)
+}
+
+// ListMyRewards @Summary Listar meus prêmios
+// @Description Lista todos os prêmios cujo dono é o usuário autenticado
+// @Tags rewards
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "Página (padrão: 1)"
+// @Param limit query int false "Limite por página (padrão: 10, máximo: 100)"
+// @Success 200 {object} models.RewardListResponse
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /rewards/mine [get]
+func (h *RewardHandler) ListMyRewards(c *gin.Context) {
+	userID, err := middleware.GetUserFromContext(c)
+
+	fmt.Println("userID", userID)
+
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Usuário não autenticado",
+			"message": "Token inválido ou ausente",
+		})
+		return
+	}
+
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	rewards, err := h.rewardService.ListByOwner(userID, page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Erro interno do servidor",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, rewards)
 }

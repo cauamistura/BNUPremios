@@ -15,10 +15,13 @@ export default function Home() {
                 setLoading(true);
                 setError(null);
                 const response = await rewardsService.getRewards();
-                setRewards(response.rewards);
+                // Garantir que rewards seja sempre um array válido
+                setRewards(response.rewards || []);
             } catch (err) {
                 setError('Erro ao carregar os prêmios. Tente novamente.');
                 console.error('Erro ao buscar prêmios:', err);
+                // Em caso de erro, garantir que rewards seja um array vazio
+                setRewards([]);
             } finally {
                 setLoading(false);
             }
@@ -45,11 +48,20 @@ export default function Home() {
                 </button>
             </div>
         );
-    }
+    }    
+
+    // Verificação adicional de segurança
+    const rewardsArray = Array.isArray(rewards) ? rewards : [];
 
     return (
-        <div className="home-container">            
-            <RewardCardList rewards={rewards} />
+        <div className="home-container">             
+            {rewardsArray.length > 0 ? (
+                <RewardCardList rewards={rewardsArray} routeItem={"premio"} />
+            ) : (
+                <div className="home-empty-container">
+                    <p>Não há prêmios disponíveis.</p>
+                </div>
+            )}
         </div>
     );
 }

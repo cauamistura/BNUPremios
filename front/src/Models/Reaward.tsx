@@ -2,20 +2,21 @@ import type { Buyer } from "./Buyers";
 
 export interface Reward {
     id: string;
+    owner_id: string;
     name: string;
     description: string;
-    image: string;    
+    image: string;
     draw_date: string;
     completed: boolean;
     created_at: string;
     updated_at: string;
-}
-
-// Novo objeto para detalhes do prêmio
-export interface RewardDetails extends Reward {
     images: string[];
     price: number;
     min_quota: number;
+}
+
+// Objeto para detalhes do prêmio com compradores
+export interface RewardDetails extends Reward {
     buyers: Buyer[] | null;
 }
 

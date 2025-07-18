@@ -1,0 +1,2 @@
+ALTER TABLE rewards DROP CONSTRAINT IF EXISTS fk_rewards_owner;
+ALTER TABLE rewards DROP COLUMN IF EXISTS owner_id; 

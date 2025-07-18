@@ -16,7 +16,7 @@ const Header: React.FC = () => {
       <a href="/" className="logo">BNU Prêmios</a>
       <div className="nav-menu" style={{ right: isMenuOpen ? '0' : '-100%' }}>
         {!isMobile && <a href="/MeuPerfil" className="nav-link cart-text">Meu Perfil</a>}
-        <a href="/participar" className="nav-link">Participar</a>
+        <a href="/MeusSorteios" className="nav-link">Meus sorteios</a>
         <a href="/contato" className="nav-link">Contato</a>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', paddingRight: '2rem' }}>

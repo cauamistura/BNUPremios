@@ -195,10 +195,11 @@ func (s *UserService) Login(loginReq *models.LoginRequest) (*models.LoginRespons
 
 	// Gerar token JWT real (simples, sem validação de segredo forte por enquanto)
 	claims := jwt.MapClaims{
-		"sub":   user.ID.String(),
-		"email": user.Email,
-		"role":  user.Role,
-		"exp":   time.Now().Add(24 * time.Hour).Unix(),
+		"sub":     user.ID.String(),
+		"user_id": user.ID.String(),
+		"email":   user.Email,
+		"role":    user.Role,
+		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(s.jwtSecret))
