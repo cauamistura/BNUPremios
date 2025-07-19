@@ -21,11 +21,14 @@ const Profile: React.FC = () => {
             try {
                 setLoading(true);
                 const response = await purchasesService.getUserPurchases(authUser.id);
-                setPurchases(response.purchases);
+                // Garantir que purchases seja sempre um array válido
+                setPurchases(response.purchases || []);
             } catch (err) {
                 const errorMessage = 'Erro ao carregar suas compras. Tente novamente.';
                 showError(errorMessage);
                 console.error('Erro ao buscar compras do usuário:', err);
+                // Em caso de erro, garantir que purchases seja um array vazio
+                setPurchases([]);
             } finally {
                 setLoading(false);
             }
@@ -130,7 +133,7 @@ const Profile: React.FC = () => {
             {/* Seção de compras */}
             <div className="profile-purchases-section">
                 <h3>Minhas Compras</h3>
-                {purchases.length === 0 ? (
+                {!purchases || purchases.length === 0 ? (
                     <div className="profile-no-purchases">
                         <p>Você ainda não fez nenhuma compra.</p>
                     </div>
