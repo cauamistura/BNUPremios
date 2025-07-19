@@ -10,6 +10,7 @@ const Profile: React.FC = () => {
     const { showError } = useToastContext();
     const [purchases, setPurchases] = useState<Purchase[]>([]);
     const [loading, setLoading] = useState(true);
+    const [expandedPurchases, setExpandedPurchases] = useState<Set<number>>(new Set());
 
     useEffect(() => {
         const fetchUserPurchases = async () => {
@@ -41,6 +42,18 @@ const Profile: React.FC = () => {
             setLoading(false);
         }
     }, [authUser?.id, authLoading]);
+
+    const togglePurchaseExpansion = (purchaseId: number) => {
+        setExpandedPurchases(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(purchaseId)) {
+                newSet.delete(purchaseId);
+            } else {
+                newSet.add(purchaseId);
+            }
+            return newSet;
+        });
+    };
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -166,11 +179,28 @@ const Profile: React.FC = () => {
                                 <div className="profile-numbers-section">
                                     <h5>Números comprados:</h5>
                                     <div className="profile-numbers-grid">
-                                        {purchase.numbers.map((number, index) => (
-                                            <span key={index} className="profile-number-badge">
-                                                {number.toString().padStart(2, '0')}
-                                            </span>
-                                        ))}
+                                        {(() => {
+                                            const isExpanded = expandedPurchases.has(purchase.id);
+                                            const numbersToShow = isExpanded ? purchase.numbers : purchase.numbers.slice(0, 20);
+                                            
+                                            return (
+                                                <>
+                                                    {numbersToShow.map((number, index) => (
+                                                        <span key={index} className="profile-number-badge">
+                                                            {number.toString().padStart(2, '0')}
+                                                        </span>
+                                                    ))}
+                                                    {purchase.numbers.length > 20 && (
+                                                        <button
+                                                            className="profile-show-more-btn"
+                                                            onClick={() => togglePurchaseExpansion(purchase.id)}
+                                                        >
+                                                            {isExpanded ? 'Mostrar menos' : `Mostrar mais (${purchase.numbers.length - 20})`}
+                                                        </button>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             </div>

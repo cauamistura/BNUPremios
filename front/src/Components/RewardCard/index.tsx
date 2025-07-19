@@ -50,46 +50,51 @@ const RewardCard: React.FC<RewardCardProps> = ({ reward, routeItem, onEdit, onDe
     };
 
     return (
-        <div className="reward-card" onClick={handleCardClick}>
-            {onEdit && (
-                <button 
-                    className="edit-button"
-                    onClick={handleEditClick}
-                    title="Editar prêmio"
-                >
-                    ✏️
-                </button>
-            )}
-            {onDelete && (
-                <button 
-                    className="delete-button"
-                    onClick={handleDeleteClick}
-                    title="Excluir prêmio"
-                >
-                    🗑️
-                </button>
-            )}
-            {onDraw && !reward.completed && (
-                <button 
-                    className="draw-button"
-                    onClick={handleDrawClick}
-                    title="Realizar sorteio"
-                >
-                    🎲
-                </button>
-            )}
-            <div className="reward-image">
-                <img src={reward.image} alt={reward.name} />
-            </div>
-            <div className="reward-info">
-                <h2 className="reward-title">{reward.name}</h2>
-                <p className="reward-description">{reward.description}</p>
-                <div className="reward-status">
-                    <p className="reward-date">Data do Sorteio: {formatDate(reward.draw_date)}</p>
-                    <span className={`reward-card-status-badge ${reward.completed ? 'completed' : 'pending'}`}>
-                        {reward.completed ? 'Sorteado' : 'Disponível'}
-                    </span>
+        <div className="reward-card-container">
+            <div className="reward-card" onClick={handleCardClick}>
+                <div className="reward-image">
+                    <img src={reward.image} alt={reward.name} />
                 </div>
+                <div className="reward-info">
+                    <h2 className="reward-title">{reward.name}</h2>
+                    <p className="reward-description">{reward.description}</p>
+                    <div className="reward-status">
+                        <p className="reward-date">Data do Sorteio: {formatDate(reward.draw_date)}</p>
+                        <span className={`reward-card-status-badge ${reward.completed ? 'completed' : 'pending'}`}>
+                            {reward.completed ? 'Sorteado' : 'Disponível'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div className="reward-actions">
+                {onEdit && (
+                    <button 
+                        className="edit-button"
+                        onClick={handleEditClick}
+                        title="Editar prêmio"
+                    >
+                        ✏️
+                    </button>
+                )}
+                {onDelete && (
+                    <button 
+                        className="delete-button"
+                        onClick={handleDeleteClick}
+                        title="Excluir prêmio"
+                    >
+                        🗑️
+                    </button>
+                )}
+                {onDraw && !reward.completed && (
+                    <button 
+                        className="draw-button"
+                        onClick={handleDrawClick}
+                        title="Realizar sorteio"
+                    >
+                        🎲
+                    </button>
+                )}
             </div>
         </div>
     );

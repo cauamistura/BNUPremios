@@ -85,17 +85,16 @@
   .reward-price-box,
   .top-buyers-section {
     max-width: 100%;
-    margin-left: 20px;
-    margin-right: 20px;
+    margin-left: 2px;
+    margin-right: 2px;
     padding: 14px 4px 10px 4px;
   }
   .top-buyers-list {
-    gap: 8px;
+    gap: 3px;
   }
   .top-buyer-card {
-    flex: 0 0 120px;
-    min-width: 100px;
-    max-width: 140px;
+    flex: 0 0 120px;    
+    max-width: 90px;
   }
   .top-buyer-name {
     font-size: 10px;

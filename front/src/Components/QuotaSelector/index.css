@@ -93,6 +93,19 @@
   }
   
   @media (max-width: 748px) {
+    .quota-total
+    .reward-price-sober {
+      font-size: 0.9rem;     
+    }
 
+    .quota-option-btn {
+      padding: 8px 10px;
+      min-width: 20px;
+      font-size: 0.8rem;
+    }
+
+    .reward-price-box{
+      gap: 5px;
+    }
   }
   
